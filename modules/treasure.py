@@ -1,15 +1,17 @@
+import datetime
+import logging
+import os
 import random
 import time
-
 from queue import PriorityQueue
 
-from .platforms import windowMP
-from .mouse_utils import move_mouse_and_click
-from .constants import Button, Action, UIElement
-from .image_utils import find_ellement
-from .settings import treasures_priority, settings_dict
+import cv2
 
-import logging
+from .constants import Action, Button, UIElement
+from .image_utils import find_ellement, get_resolution, partscreen
+from .mouse_utils import move_mouse_and_click
+from .platforms import windowMP
+from .settings import settings_dict, treasures_priority
 
 log = logging.getLogger(__name__)
 
@@ -27,6 +29,28 @@ def chooseTreasure():
         treasures_queue.put((treasures_priority[treasure], treasure))
 
     log.debug(f"treasures queue contains : {treasures_queue}")
+
+    # capture current screen and save it to logs/treasures
+    ## first ensure the directory exists
+    ## then capture the screen
+    if log.level == logging.DEBUG:
+        treasure_log_dir = "logs/treasures"
+        if not os.path.exists(treasure_log_dir):
+            os.makedirs(treasure_log_dir)
+        
+        ## capture the screen
+        log.debug("Capturing screen for treasure selection")
+        resolution, width, height, scale_size = get_resolution()
+        part_Image = partscreen(
+                windowMP()[2],
+                windowMP()[3],
+                windowMP()[1],
+                windowMP()[0],
+                resize_width=width,
+                resize_height=height,
+            )
+        time_stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        cv2.imwrite(f"{treasure_log_dir}/{time_stamp}.png", part_Image)
 
     while not treasures_queue.empty():
         next_treasure = treasures_queue.get()[1]

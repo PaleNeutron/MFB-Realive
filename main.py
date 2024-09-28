@@ -1,15 +1,15 @@
 #! /usr/bin/env python3
-import time
+import logging
 import sys
+import time
 
-from modules.gameloop import where
 from modules.battlenetloop import enter_from_battlenet
+from modules.gameloop import where
 from modules.platforms import win
 from modules.resolution import gen_images_new_resolution
 
-import logging
-
 log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
 def main():

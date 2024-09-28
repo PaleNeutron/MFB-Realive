@@ -359,11 +359,6 @@
         "2": false,
         "3": "friend:Imp"
     },
-    "Nemsy Necrofizzle": {
-        "1": true,
-        "2": "friend",
-        "3": "friend"
-    },
     "N'Zoth": {
         "1": true,
         "2": true,
@@ -444,11 +439,6 @@
         "2": true,
         "3": false
     },
-    "Bwonsamdi": {
-        "1": true,
-        "2": "chooseone3",
-        "3": true
-    },
     "C'Thun": {
         "1": true,
         "2": true,
@@ -478,11 +468,6 @@
         "1": true,
         "2": "chooseone2",
         "3": "friend"
-    },
-    "Garona Halforcen": {
-        "1": true,
-        "2": false,
-        "3": "chooseone3"
     },
     "Illidan Stormrage": {
         "1": true,

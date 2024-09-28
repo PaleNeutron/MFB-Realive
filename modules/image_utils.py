@@ -1,22 +1,19 @@
-import sys
+import logging
 import os.path
+import sys
 
 import cv2
-import numpy as np
-
-
-from .platforms import windowMP
-from .mouse_utils import move_mouse_and_click, move_mouse
-
-from .settings import settings_dict, jthreshold
-from .constants import Action
-
-import logging
 
 # needed as workaround for Linux
 # https://stackoverflow.com/questions/74856512/screenshot-error-xdefaultrootwindow-failed-after-closing-a-tkinter-toplevel
 # https://github.com/BoboTiG/python-mss/issues/220
 import mss
+import numpy as np
+
+from .constants import Action
+from .mouse_utils import move_mouse, move_mouse_and_click
+from .platforms import windowMP
+from .settings import jthreshold, settings_dict
 
 sct = mss.mss()
 # workaround end ###
@@ -164,7 +161,12 @@ def find_element_from_file(
 
     img = cv2.cvtColor(find_element_from_file.partImg, cv2.COLOR_BGR2GRAY)
 
-    template = get_gray_image(f"files/{resolution}/{file}")
+    file_path = f"files/{resolution}/{file}"
+    if not os.path.isfile(file_path):
+        log.error(f'Err: file "{file_path}" doesn\'t exist.')
+        return None
+    
+    template = get_gray_image(file_path)
 
     click_coords = find_element_center_on_screen(img, template, threshold, scale_size)
 

@@ -30,3 +30,5 @@ mfb.log
 
 # venv environment
 MFB/
+.venv/
+.vscode/
