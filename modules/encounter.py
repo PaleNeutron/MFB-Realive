@@ -1,18 +1,21 @@
+"""
+This module targets enemies and uses abilities during encounters.
+"""
+
+import logging
+import random
 import re
 import time
-import random
-import logging
 from typing import List
+from collections import namedtuple
 
-from .platforms import windowMP
-from .mouse_utils import move_mouse_and_click, move_mouse, mouse_click  # , mouse_scroll
-
-from .image_utils import find_ellement
-from .constants import UIElement, Button, Action
+from .constants import Action, Button, UIElement
 from .game import countdown, waitForItOrPass
-
+from .image_utils import find_element
 from .log_board import LogHSMercs
-from .settings import settings_dict, mercslist, mercsAbilities, ability_order
+from .mouse_utils import move_mouse, move_mouse_and_click, mouse_click
+from .platforms import windowMP
+from .settings import ability_order, mercsAbilities, mercslist, settings_dict
 
 log = logging.getLogger(__name__)
 
@@ -20,45 +23,76 @@ default_ability_section = "Mercenary"
 ability_section = default_ability_section
 
 
-class Enemies:
-    def __init__(self, red, green, blue, noclass, noclass2, mol):
-        self.red = red
-        self.green = green
-        self.blue = blue
-        self.noclass = noclass
-        self.noclass2 = noclass2
-        self.mol = mol
+class Enemies(
+    namedtuple("Enemies", ["red", "green", "blue", "noclass", "noclass2", "mol"])
+):
+    """
+    Class to manage enemies in the game.
+    Attributes:
+    red: An integer representing the number of red enemies.
+    green: An integer representing the number of green enemies.
+    blue: An integer representing the number of blue enemies.
+    no_class: An integer representing the number of enemies with no class.
+    no_class2: An integer representing the number of enemies with no second class.
+    mol: An integer representing the number of mol enemies.
+    """
 
 
-class Board:
-    def __init__(self):
-        self.card_width = windowMP()[2] // 16
-        self.card_height = windowMP()[3] // 6
+class Board(
+    namedtuple(
+        "Board",
+        ["card_width", "card_height", "position_even", "position_odd", "my_board_y"],
+    )
+):
+    """
+    Class to manage the game board.
+    Attributes:
+    card_width: An integer representing the width of a card on the board.
+    card_height: An integer representing the height of a card on the board.
+    position_even: A list of integers representing the positions of the cards on the even rows of the board.
+    position_odd: A list of integers representing the positions of the cards on the odd rows of the board.
+    my_board_y: A float representing the y-coordinate of the board.
+    """
+
+    def __new__(cls):
+        card_width = windowMP()[2] // 16
+        card_height = windowMP()[3] // 6
 
         card_size = windowMP()[2] // 12
         first_even = windowMP()[2] // 3.6
 
         positions = [first_even + i * card_size // 2 for i in range(11)]
-        self.position_even = positions[::2]
-        self.position_odd = positions[1::2]
+        position_even = positions[::2]
+        position_odd = positions[1::2]
 
-        self.myboard.y = windowMP()[3] / 1.5
-        # self.enemy.y =
+        my_board_y = windowMP()[3] / 1.5
+
+        return super().__new__(
+            cls, card_width, card_height, position_even, position_odd, my_board_y
+        )
 
 
 def select_enemy_to_attack(index):
-    """Used to move the mouse over an enemy to attack it
-    (after selecting a merc's ability)
+    """
+    Moves the mouse over an enemy to attack it after selecting a merc's ability.
+
+    Args:
+    index: A list of two integers representing the x and y coordinates of the enemy.
+
+    Returns:
+    A boolean value indicating whether the mouse was moved successfully.
     """
     cardWidth = windowMP()[2] // 16
     cardHeight = windowMP()[3] // 6
     retour = False
 
     if index:
-        time.sleep(0.1)
+        time.sleep(0.3)
         log.debug(
-            f"Move index (index, x, y) : {index}"
-            f" {index[0] + (cardWidth // 2)} {index[1] - (cardWidth // 3)}",
+            "Move index (index, x, y) : %s %s %s",
+            index,
+            index[0] + (cardWidth // 2),
+            index[1] - (cardWidth // 3),
         )
         move_mouse_and_click(
             windowMP(), index[0] + (cardWidth // 3), index[1] - (cardHeight // 2)
@@ -68,10 +102,13 @@ def select_enemy_to_attack(index):
 
 
 def select_random_enemy_to_attack(enemies=None):
-    """look for a random enemy
-    (used when blue mercs can't find red enemy,
-    green can't find blue or
-    red can't find green
+    """Selects a random enemy to attack.
+
+    Args:
+    enemies: An instance of the Enemies class representing the current state of enemies.
+
+    Returns:
+    A boolean value indicating whether an enemy was selected successfully.
     """
     enemies = enemies or []
     log.debug("select_random_enemy_to_attack : %s len=%s", enemies, len(enemies))
@@ -93,8 +130,10 @@ def select_random_enemy_to_attack(enemies=None):
 
 def priorityMercByRole(myMercs, targetrole) -> List[int]:
     """
-    return merc position list prioritize by the targetRole comes first,
-        non target role after and minion comes last
+    Prioritizes a list of mercenaries by a specified role.
+
+    Returns:
+        A list of mercenary positions where mercenaries of the target role come first, followed by non-target roles and minions at the end.
     """
     mercs_pos = []
     # add targetrole mercs first
@@ -117,8 +156,42 @@ def priorityMercByRole(myMercs, targetrole) -> List[int]:
     return mercs_pos
 
 
+def calculate_positions(number, position):
+    """
+    Calculates the positions based on the given number and position.
+
+    Args:
+        number (int): The number used for position calculation.
+        position (int): The position used for position calculation.
+
+    Returns:
+        tuple: A tuple containing two values - the calculated position index and the corresponding x-coordinate.
+    """
+    cardSize = int(windowMP()[2] / 12)
+    firstOdd = int(windowMP()[2] / 3)
+    firstEven = int(windowMP()[2] / 3.6)
+
+    positionOdd = [int(firstOdd + (i * cardSize)) for i in range(5)]
+    positionEven = [int(firstEven + (i * cardSize)) for i in range(6)]
+
+    pos_and_x_calculations = {
+        0: lambda: (
+            int(2 - (number / 2 - 1) + (position - 1)),
+            positionEven[int(2 - (number / 2 - 1) + (position - 1))],
+        ),
+        1: lambda: (
+            int(2 - (number - 1) / 2 + (position - 1)),
+            positionOdd[int(2 - (number - 1) / 2 + (position - 1))],
+        ),
+    }
+
+    return pos_and_x_calculations[number % 2]()
+
+
 def ability_target_friend(targettype, myMercs, enemies: Enemies, abilitySetting):
-    """Return the X coord of one of our mercenaries"""
+    """
+    Return the X coord of one of our mercenaries
+    """
 
     friendName = abilitySetting["name"]
 
@@ -170,8 +243,18 @@ def ability_target_friend(targettype, myMercs, enemies: Enemies, abilitySetting)
 
 
 def pickBestAllyToBuff(enemies, myMercs, number):
-    # TODO get multiple enemies per role for priority by
-    # weakness of the most role of enemy
+    """
+    Selects the best ally to buff based on the enemies' roles.
+
+    Args:
+        enemies: A list of enemy mercenaries.
+        number: The total number of our mercenaries.
+
+    Returns:
+        The position of the best ally to buff.
+
+    TODO get multiple enemies per role for priority by weakness
+    """
     if enemies.blue:
         # enemies have blue so we buff red merc first
         position = random.choice(priorityMercByRole(myMercs, "Protector"))
@@ -186,8 +269,17 @@ def pickBestAllyToBuff(enemies, myMercs, number):
     return position
 
 
-# TODO This could also be moved to an entirely new module
 def findFriendNameInMercs(myMercs, friendName):
+    """
+    Searches for a friend's name in a list of mercenaries.
+
+    Args:
+        myMercs (list): A list of mercenaries.
+        friendName (str): The name of the friend to search for.
+
+    Returns:
+        bool: True if the friend's name is found in the list, False otherwise.
+    """
     for i in myMercs:
         log.debug("***** Looking for our friend %s ... ******", friendName)
         if re.search(rf"\A{friendName}\b", myMercs[i]):
@@ -197,7 +289,16 @@ def findFriendNameInMercs(myMercs, friendName):
 
 
 def get_ability_for_this_turn(name, minionSection, turn, defaultAbility=0):
-    """Get the ability (configured) for this turned for the selected Merc/minion"""
+    """
+    Retrieves the configured ability for a selected mercenary or minion during a specific turn.
+
+    Args:
+        name: The name of the mercenary or minion.
+        turn: The current turn.
+
+    Returns:
+        The ability to use for this turn.
+    """
 
     if minionSection in ability_order and name.lower() in ability_order[minionSection]:
         # in combo.ini, split (with ",") to find the ability to use this turn
@@ -219,40 +320,67 @@ def get_ability_for_this_turn(name, minionSection, turn, defaultAbility=0):
     return str(ability)
 
 
-def parse_ability_setting(ability):
-    retour = {
-        "ai": "byColor",
-        "chooseone": 0,
-        "faction": None,
-        "name": None,
-        "role": None,
-        "type": None,
-    }
+DEFAULT_SETTINGS = {
+    "ai": "byColor",
+    "chooseone": 0,
+    "faction": None,
+    "name": None,
+    "role": None,
+    "type": None,
+}
 
-    if ":" not in ability:
-        retour["ability"] = int(ability)
-    else:
-        retour["ability"] = int(ability.split(":")[0])
-        retour["config"] = ability.split(":")[1]
+KEY_TO_CAST_FUNC = {
+    "chooseone": lambda x: int(x) - 1,
+    "ai": str,
+    "name": str,
+    "type": str,
+    "role": str,
+}
+
+
+def parse_ability_setting(ability):
+    """
+    Parses the ability setting from a given string.
+
+    Args:
+        ability: The ability setting string to parse.
+
+    Returns:
+        A dictionary containing parsed ability settings.
+    """
+    retour = DEFAULT_SETTINGS.copy()
+
+    if ":" in ability:
+        ability_value, config_value = ability.split(":")
+        retour["ability"] = int(ability_value)
+        retour["config"] = config_value
+
         for i in retour["config"].split("&"):
             key, value = i.split("=")
-            if key == "chooseone":
-                retour["chooseone"] = int(value) - 1
-            elif key == "ai":
-                retour["ai"] = value
-            elif key == "name":
-                retour["name"] = value
-            elif key == "type":
-                retour["type"] = value
-            elif key == "role":
-                # "role" should be "Protector", "Caster" or "Fighter"
-                retour["role"] = value
+
+            if key in KEY_TO_CAST_FUNC:
+                retour[key] = KEY_TO_CAST_FUNC[key](value)
             else:
                 log.warning("Unknown parameter")
+    elif ability.isdigit():
+        retour["ability"] = int(ability)
+    else:
+        log.warning("Invalid ability")
+
     return retour
 
 
 def didnt_find_a_name_for_this_one(name, minionSection, turn, defaultAbility=0):
+    """
+    Retrieves the configuration of an ability for a specific turn and then selects this ability for a certain mercenary or minion.
+
+    Args:
+        name: The name of the mercenary or minion.
+        turn: The current turn.
+
+    Returns:
+        The configuration of the selected ability.
+    """
     abilitiesWidth = windowMP()[2] // 14.2
     abilitiesHeigth = windowMP()[3] // 7.2
 
@@ -277,8 +405,9 @@ def didnt_find_a_name_for_this_one(name, minionSection, turn, defaultAbility=0):
         log.debug("No ability selected (0)")
     elif ability >= 1 and ability <= 3:
         log.debug(
-            f"abilities Y : {abilitiesPositionY} |"
-            f" abilities X : {abilitiesPositionX}"
+            "abilities Y : %s | abilities X : %s",
+            abilitiesPositionY,
+            abilitiesPositionX,
         )
         abilityScreenshot = [
             int(abilitiesWidth),
@@ -287,7 +416,7 @@ def didnt_find_a_name_for_this_one(name, minionSection, turn, defaultAbility=0):
             int(windowMP()[0] + abilitiesPositionX[0]),
         ]
         if (
-            find_ellement(
+            find_element(
                 UIElement.hourglass.filename,
                 Action.get_coords,
                 new_screen=abilityScreenshot,
@@ -300,22 +429,30 @@ def didnt_find_a_name_for_this_one(name, minionSection, turn, defaultAbility=0):
                 int(abilitiesPositionY + abilitiesHeigth // 2),
             )
     else:
-        log.warning(f"No ability selected for {name}")
+        log.warning("No ability selected for %s", name)
         abilityConfig["ability"] = 0
 
     return abilityConfig
 
 
 def select_ability(localhero, myBoard, enemies: Enemies, raund):
-    """Select an ability for a mercenary.
-        Depend on what is available and wich Round (battle)
-    Click only on the ability (doesnt move to an enemy)
+    """
+    Selects an ability for a mercenary based on available abilities and the current round.
+
+    Args:
+        enemies: A list of enemy mercenaries.
+
+    Returns:
+        A boolean indicating whether or not an ability was successfully selected.
     """
 
     if localhero in mercsAbilities:
         retour = False
+        time.sleep(0.3)
         chooseone2 = [windowMP()[2] // 2.4, windowMP()[2] // 1.7]
+        time.sleep(0.3)
         chooseone3 = [windowMP()[2] // 3, windowMP()[2] // 2, windowMP()[2] // 1.5]
+        time.sleep(0.3)
 
         abilitySetting = didnt_find_a_name_for_this_one(
             localhero, ability_section, raund, 1
@@ -325,7 +462,7 @@ def select_ability(localhero, myBoard, enemies: Enemies, raund):
             if isinstance(mercsAbilities[localhero][str(ability)], bool):
                 retour = mercsAbilities[localhero][str(ability)]
             elif mercsAbilities[localhero][str(ability)] == "chooseone3":
-                time.sleep(0.2)
+                time.sleep(0.3)
                 move_mouse_and_click(
                     windowMP(),
                     chooseone3[abilitySetting["chooseone"]],
@@ -333,7 +470,7 @@ def select_ability(localhero, myBoard, enemies: Enemies, raund):
                 )
                 retour = True
             elif mercsAbilities[localhero][str(ability)] == "chooseone2":
-                time.sleep(0.2)
+                time.sleep(0.3)
                 move_mouse_and_click(
                     windowMP(),
                     chooseone2[abilitySetting["chooseone"]],
@@ -341,7 +478,7 @@ def select_ability(localhero, myBoard, enemies: Enemies, raund):
                 )
                 retour = True
             elif mercsAbilities[localhero][str(ability)].startswith("friend"):
-                time.sleep(0.2)
+                time.sleep(0.3)
 
                 # if attacks.json shows something more than just "friend" (like "Beast")
                 if ":" in mercsAbilities[localhero][str(ability)]:
@@ -416,8 +553,9 @@ def take_turn_action(
     log.info("attack with : %s ( position : %s/%s =%s)", mercName, position, number, x)
 
     move_mouse_and_click(windowMP(), x, y)
-    time.sleep(0.2)
+    time.sleep(0.3)
     move_mouse(windowMP(), windowMP()[2] / 3, windowMP()[3] / 2)
+    time.sleep(0.3)
     if mercName in mercslist:
         if (
             mercslist[mercName]["role"] == "Protector"
@@ -459,59 +597,73 @@ def take_turn_action(
         )
 
 
-# Look for enemies
+def execute_action_sequence(window, x, y):
+    """
+    Execute a sequence of actions.
+
+    Args:
+        window: The game window.
+        x: The x-coordinate of the target location.
+        y: The y-coordinate of the target location.
+    """
+    move_mouse_and_click(window, x, y)
+    time.sleep(0.3)
+    move_mouse(window, window[2] / 3, window[3] / 2)
+    time.sleep(0.3)
+
+
 def find_enemies(ns=True) -> Enemies:
-    # we use new screenshot for the first call
-    # then we already have the image in memory
-    enemyred = find_red_enemy(ns)
-    enemygreen = find_green_enemy(ns)
-    enemyblue = find_blue_enemy(ns)
-    enemynoclass = find_noclass_enemy(ns)
-    enemynoclass2 = find_noclass2_enemy(ns)
-    enemymol = find_mol_enemy(ns)
+    """
+    Find and return the count of different enemy types.
+
+    Args:
+        ns: A boolean indicating whether to consider non-standard enemy types.
+
+    Returns:
+        An instance of the Enemies class containing the count of different enemy types.
+
+    """
+    # Get the window geometry once
+    window_geometry = windowMP()
+
+    # Find all enemy types
+    enemyred = find_enemy("red", window_geometry, ns)
+    enemygreen = find_enemy("green", window_geometry, ns)
+    enemyblue = find_enemy("blue", window_geometry, ns)
+    enemynoclass = find_enemy("noclass", window_geometry, ns)
+    enemynoclass2 = find_enemy("noclass2", window_geometry, ns)
+    enemymol = find_enemy("sob", window_geometry, ns)
 
     log.info(
-        f"Enemies : red {enemyred}"
-        f" - green {enemygreen}"
-        f" - blue {enemyblue}"
-        f" - noclass {enemynoclass}"
-        f" - noclass2 {enemynoclass2}"
-        f" - mol {enemymol}"
+        "Enemies : red %s - green %s - blue %s - noclass %s - noclass2 %s - mol %s",
+        enemyred,
+        enemygreen,
+        enemyblue,
+        enemynoclass,
+        enemynoclass2,
+        enemymol,
     )
+
     return Enemies(
         enemyred, enemygreen, enemyblue, enemynoclass, enemynoclass2, enemymol
     )
 
 
-def find_red_enemy(ns=True):
-    return find_enemy("red", ns)
+def find_enemy(enemy_role, window_geometry, ns=True):
+    """
+    Finds the coordinates of an enemy on the game screen.
 
+    Args:
+        enemy_role (str): The role of the enemy to find.
+        window_geometry (tuple): The geometry of the game window.
+        ns (bool, optional): Determines whether to use a new screenshot for the search. Default is True.
 
-def find_green_enemy(ns=True):
-    return find_enemy("green", ns)
-
-
-def find_blue_enemy(ns=True):
-    return find_enemy("blue", ns)
-
-
-def find_noclass_enemy(ns=True):
-    return find_enemy("noclass", ns)
-
-
-def find_noclass2_enemy(ns=True):
-    return find_enemy("noclass2", ns)
-
-
-def find_mol_enemy(ns=True):
-    return find_enemy("sob", ns)
-
-
-def find_enemy(enemy_role, ns=True):
-    enemy = find_ellement(
+    Returns:
+        tuple or None: The coordinates (x, y) of the enemy if found, None otherwise.
+    """
+    enemy = find_element(
         getattr(UIElement, enemy_role).filename, Action.get_coords, new_screen=ns
     )
-    # find_element: Can be changed to return None or actual coords if exists
     if enemy:
         enemy = (
             enemy[0],
@@ -521,13 +673,20 @@ def find_enemy(enemy_role, ns=True):
 
 
 def battle(zoneLog=None):
-    """Find the cards on the battlefield (yours and those of your opponents)
-    and make them battle until one of yours die
+    """
+    Simulate battles between the cards on the battlefield until one of your cards dies.
+
+    Args:
+        zoneLog: An instance of the zone log class.
+
+    Returns:
+        str: The outcome of the battle, either "win" or "loose".
     """
     retour = True
 
     raund = 1
     while True:
+        time.sleep(0.3)
         move_mouse(
             windowMP(),
             windowMP()[2] // 4,
@@ -540,11 +699,11 @@ def battle(zoneLog=None):
         #   are put back on battlefield with a "ready" button
         #       but the bot is waiting for a victory / defeat /
         #   ... or the yellow button ready
-        find_ellement(Button.allready.filename, Action.move_and_click)
+        find_element(Button.allready.filename, Action.move_and_click)
 
-        find_ellement(Button.onedie.filename, Action.move_and_click)
+        find_element(Button.onedie.filename, Action.move_and_click)
 
-        if find_ellement(UIElement.win.filename, Action.screenshot) or find_ellement(
+        if find_element(UIElement.win.filename, Action.screenshot) or find_element(
             UIElement.win_final.filename, Action.screenshot
         ):
             retour = "win"
@@ -552,7 +711,7 @@ def battle(zoneLog=None):
             zoneLog.cleanBoard()
 
             break
-        elif find_ellement(UIElement.lose.filename, Action.screenshot):
+        elif find_element(UIElement.lose.filename, Action.screenshot):
             retour = "loose"
             move_mouse_and_click(
                 windowMP(),
@@ -561,16 +720,15 @@ def battle(zoneLog=None):
             )
             zoneLog.cleanBoard()
             break
-        elif find_ellement(
+        elif find_element(
             Button.fight.filename, Action.screenshot
-        ):  # or find_ellement(Button.startbattle1.filename, Action.screenshot):
-
+        ):  # or find_element(Button.startbattle1.filename, Action.screenshot):
             # looks for your enemies on board thanks to log file
             enemies = zoneLog.getEnemyBoard()
-            log.info(f"Round {raund} : enemy board {enemies}")
+            log.info("Round %s : enemy board %s", raund, enemies)
             # looks for your Mercenaries on board thanks to log file
             mercenaries = zoneLog.getMyBoard()
-            log.info(f"Round {raund} :  your board {mercenaries}")
+            log.info("Round %s :  your board %s", raund, mercenaries)
 
             # click on neutral zone to avoid problem with screenshot
             # when you're looking for red/green/blue enemies
@@ -622,11 +780,11 @@ def battle(zoneLog=None):
                 time.sleep(0.1)
 
             i = 0
-            while not find_ellement(Button.allready.filename, Action.move_and_click):
+            while not find_element(Button.allready.filename, Action.move_and_click):
                 if i > 5:
                     move_mouse(windowMP(), windowMP()[2] // 1.2, windowMP()[3] // 3)
                     mouse_click("right")
-                    find_ellement(Button.fight.filename, Action.move_and_click)
+                    find_element(Button.fight.filename, Action.move_and_click)
                     break
                 time.sleep(0.2)
                 i += 1
@@ -637,29 +795,36 @@ def battle(zoneLog=None):
 
 
 def selectCardsInHand(zL=None):
-    """Select the cards to put on battlefield
-    and then, start the 'battle' function
-    Update : actually, the bot doesn't choose it anymore
-    since we stopped to use image with mercenaries text
-    (so we can easily support multi-language)
-        this feature will come back later using HS logs
+    """
+    Select the cards to put on the battlefield and start the 'battle' function.
+    Note: The feature of choosing cards manually from images with text has been temporarily disabled
+    to support multi-language. This feature will be reintroduced in the future using HS logs.
+
+    Args:
+        zL: An instance of LogHSMercs representing the zone log.
+
+    Returns:
+        The result of the battle.
+
+    Raises:
+        None
     """
 
     log.debug("[ SETH - START]")
     retour = True
     global ability_section
 
-    # while not find_ellement(Button.num.filename, Action.screenshot):
+    # while not find_element(Button.num.filename, Action.screenshot):
     #    time.sleep(2)
     waitForItOrPass(Button.num, 60, 2)
 
-    if find_ellement(Button.num.filename, Action.screenshot):
+    if find_element(Button.num.filename, Action.screenshot):
         zL = LogHSMercs(settings_dict["zonelog"])
         # check if Zone.log was erased so we need to go back
         zL.find_battle_start_log()
         zL.start()
         while not zL.eof:
-            print("Reaching Zone.log end before starting")
+            # print("Reaching Zone.log end before starting")
             time.sleep(1)
 
         # check if HS is ready for the battle
@@ -667,18 +832,17 @@ def selectCardsInHand(zL=None):
         boss = zL.getEnemyBoard()
         for i in boss:
             if boss[i] in ability_order:
-                log.info(f"Specific conf found to beat: {boss[i]}")
+                log.info("Specific conf found to beat: %s", boss[i])
                 ability_section = boss[i]
                 break
 
-        # wait 'WaitForEXP' (float) in minutes, to make the battle last longer
+        # wait 'WaitForEXP' to make the battle last longer
         # and win more XP (for the Hearthstone reward track)
         wait_for_exp = settings_dict["waitforexp"]
-        log.info(f"WaitForEXP - wait (second(s)) : {wait_for_exp}")
-        # time.sleep(wait_for_exp)
+        log.info("WaitForEXP - wait (second(s)) : %s", wait_for_exp)
         countdown(wait_for_exp, 10, "Wait for XP : sleeping")
 
-        log.debug(f"windowMP = {windowMP()}")
+        log.debug("windowMP = %s", windowMP())
         x1 = windowMP()[2] // 2.6
         y1 = windowMP()[3] // 1.09
         x2 = windowMP()[2] // 10
@@ -687,19 +851,19 @@ def selectCardsInHand(zL=None):
         # Look if user configured the bot to select cards in hand
         # and put them on board
         if "_handselection" in ability_order[ability_section]:
-            log.info(f"Cards in hand: {zL.getHand()}")
+            log.info("Cards in hand: %s", zL.getHand())
             cards = cardsInHand(windowMP(), zL, 3)
 
             for merc in ability_order[ability_section]["_handselection"].split("+"):
                 cards.send_to_board(merc)
-                if find_ellement(Button.allready.filename, Action.screenshot):
+                if find_element(Button.allready.filename, Action.screenshot):
                     break
 
         # let the "while". In future release,
         #   we could add a function to select specifics cards
         while not (
-            find_ellement(Button.num.filename, Action.move_and_click)
-            or find_ellement(Button.allready.filename, Action.move_and_click)
+            find_element(Button.num.filename, Action.move_and_click)
+            or find_element(Button.allready.filename, Action.move_and_click)
         ):
             move_mouse(windowMP(), x1, y1)
             move_mouse(windowMP(), x2, y2)
@@ -716,41 +880,97 @@ def selectCardsInHand(zL=None):
 
 
 class cardsInHand:
+    """
+    Class to manage the cards in hand.
+
+    Attributes:
+    win: A tuple representing the window geometry.
+    zone_log: An instance of LogHSMercs representing the zone log.
+    in_hand: A list of cards in hand.
+    on_board: An integer representing the number of cards currently on the board.
+    max_on_board: An integer representing the maximum number of cards allowed on the board.
+
+    Methods:
+    send_to_board: Sends a card to the board.
+    """
+
     def __init__(self, win, zLog, max_on_board):
+        """
+        Initializes an instance of the class.
+
+        Args:
+            win: The window object.
+            zLog: The zone log object.
+            max_on_board (int): The maximum number of mercenaries allowed on the board.
+
+        Returns:
+            None
+        """
         self.win = win
         self.zone_log = zLog
         # used to init (set to False) "AutoCorrectZonesAfterServerChange"
-        self.zone_log.get_zonechanged()
+        # self.zone_log.get_zonechanged()
         self.in_hand = self.zone_log.getHand()
         self.on_board = 0
         self.max_on_board = max_on_board
 
-    def send_to_board(self, mercenary):
+    def send_to_board(self, mercenary, i=None):
+        """
+        Sends a mercenary to the board.
+
+        Args:
+            mercenary: The mercenary object to be sent to the board.
+
+        Returns:
+            bool: True if the mercenary was successfully sent to the board, False otherwise.
+        """
         if self.on_board < self.max_on_board:
             coord_x = self.get_coord(mercenary)
             if coord_x == 0:
                 return False
             move_mouse_and_click(self.win, coord_x, self.coord_y)
             move_mouse_and_click(self.win, self.win[2] // 1.33, self.win[3] // 1.63)
-            log.debug(f"Put on board: {mercenary}")
+            log.debug("Put on board: %s", mercenary)
             self.on_board += 1
             self.in_hand.remove(mercenary)
-            i = 0
+
             while not self.zone_log.get_zonechanged():
                 time.sleep(0.5)
                 i += 1
                 if i > 10:
-                    log.error(f"Putting {mercenary} on board failed.")
+                    log.error("Putting %s on board failed.", mercenary)
                     break
 
+            
     def clean(self):
+        """
+        Cleans the hand and board by resetting their values.
+
+        Returns:
+            None
+        """
         self.in_hand = []
         self.on_board = 0
 
     def get_size(self):
+        """
+        Gets the size of the hand.
+
+        Returns:
+            int: The size of the hand.
+        """
         return len(self.in_hand)
 
     def get_coord(self, mercenary):
+        """
+        Calculates the x-coordinate for a given mercenary.
+
+        Args:
+            mercenary: The mercenary object.
+
+        Returns:
+            int: The calculated x-coordinate.
+        """
         self.coord_y = self.win[3] // 1.085
         if mercenary not in self.in_hand:
             return 0

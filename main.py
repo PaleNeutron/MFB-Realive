@@ -1,4 +1,7 @@
 #! /usr/bin/env python3
+"""
+Main script. This tries to find your game window and launch for you
+"""
 import logging
 import sys
 import time
@@ -13,23 +16,26 @@ log.setLevel(logging.DEBUG)
 
 
 def main():
-    log.info(f"Python version: {sys.version}")
+    """
+    Checks python and tries to find the Hearthstone or Battle.net window.
+    """
+    log.info("Python version: %s", sys.version)
     gen_images_new_resolution()
-    #Sometimes it is the first BN window shall be launched, sometimes it is the second.
-    BNCount=1
+    # Sometimes it is the first BN window shall be launched, sometimes it is the second.
+    BNCount = 1
 
     while True:
         log.debug("Loop")
         try:
             if win.find_game("Hearthstone"):
                 where()
-                BNCount=1
+                BNCount = 1
             elif win.find_game("Battle.net", BNCount):
                 enter_from_battlenet()
-                if BNCount==0:
-                    BNCount=1
-                else: 
-                    BNCount=0
+                if BNCount == 0:
+                    BNCount = 1
+                else:
+                    BNCount = 0
                 time.sleep(1)
         except KeyboardInterrupt as kerr:
             log.info("Keyboard Interrupt %s", kerr)

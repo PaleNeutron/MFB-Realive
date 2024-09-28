@@ -1,8 +1,18 @@
+"""
+This module provides functions for managing game settings and configurations.
+
+Functions:
+- add_bot_settings: Add default bot settings to the settings dictionary.
+- get_system_user_settings: Get system and user settings and merge them into a single dictionary.
+- get_settings: Read the settings file and return the settings as a dictionary.
+- copy_config_from_sample_if_not_exists: Copy the sample config to the config file if it doesn't exist.
+"""
 import logging
+import os
 import pathlib
 import shutil
 
-from modules.exceptions import MissingGameDirectory, UnsetGameDirectory, SettingsError
+from modules.exceptions import MissingGameDirectory, SettingsError, UnsetGameDirectory
 from modules.file_utils import parseINI, readINI
 from modules.utils import update
 
@@ -13,21 +23,44 @@ BASE_IMAGES_DIR = "files"
 
 
 def add_bot_settings(set_dict):
+    """
+    Adds bot specific settings to a settings dictionary. The settings added include
+    default resolution, root images directory, images directory and user files directory.
+
+    Args:
+        set_dict (dict): The original settings dictionary.
+
+    Returns:
+        dict: The updated settings dictionary containing the bot settings.
+    """
     set_dict["default_resolution"] = DEFAULT_RESOLUTION
 
     set_dict["root_images_dir"] = BASE_IMAGES_DIR
     set_dict["images_dir"] = pathlib.PurePath(
         BASE_IMAGES_DIR, DEFAULT_RESOLUTION
     ).as_posix()
-
     set_dict["user_files_dir"] = pathlib.PurePath("conf", "user").as_posix()
     #    print(set_dict["user_files_dir"])
     #    print(set_dict["images_dir"])
-
     return set_dict
 
 
 def get_system_user_settings(system_settings_filename, user_settings_filename):
+    """
+    Fetches system and user settings, updates and merges them into a single dictionary.
+    Raises exceptions for unset or missing game directories, and logs all the final settings.
+
+    Args:
+        system_settings_filename (str): The name of the system settings file.
+        user_settings_filename (str): The name of the user settings file.
+
+    Returns:
+        dict: The final settings dictionary containing both system and user settings.
+
+    Raises:
+        UnsetGameDirectory: If the game directory is not set.
+        MissingGameDirectory: If the game directory does not exist.
+    """
     try:
         system_settings_dict = get_settings(system_settings_filename)
         user_settings_dict = get_settings(user_settings_filename)
@@ -38,54 +71,56 @@ def get_system_user_settings(system_settings_filename, user_settings_filename):
         game_dir = pathlib.Path(settings_dict["gamedir"])
         if not game_dir.is_dir():
             raise MissingGameDirectory(f"Game directory ({game_dir}) does not exist")
-        else:
-            logs_dir = game_dir / "Logs"
-            latest_folder = max(logs_dir.iterdir(), key=lambda x: x.stat().st_mtime)
-            latest_dir = logs_dir / latest_folder
-            settings_dict["zonelog"] = pathlib.PurePath(
-                latest_dir, "Zone.log"
-            ).as_posix()
 
-        log.info("Settings")
-        for setting, value in settings_dict.items():
-            log.info(f" - {setting}: {value}")
-    except Exception as e:
-        log.error("Running without settings:", e)
+        logs_dir = f"{settings_dict['gamedir']}/Logs"
+        subdirectories = os.listdir(logs_dir)
+
+        settings_dict["zonelog"] = pathlib.PurePath(
+            game_dir,
+            f"Logs/{subdirectories[-1]}/Zone.log",
+        ).as_posix()
+    except (MissingGameDirectory, UnsetGameDirectory) as e:
+        log.error("Running without settings: %s", e)
 
     return add_bot_settings(settings_dict)
 
 
 def get_settings(settings_filename):
-    """Read settings.ini and put it in a dict.
-    Settings -
-        * Resolution (1920x1080),
-        * level (20),
-        * location (Barrens),
-        * mode (Heroic),
-        * quitBeforeBossFight (True),
-        * monitor (1),
-        * MouseSpeed (0.5),
-        * WaitForEXP (3),
-        * Zonelog (GameDir/Logs/Zone.log)
+    """
+    Reads the settings from a given settings file and returns them in a dictionary.
+    The settings include resolution, level, location, mode, quit before boss fight status,
+    monitor number, mouse speed, wait for EXP, and zone log file location.
+
+    Args:
+        settings_filename (str): The name of the settings file.
+
+    Returns:
+        dict: The settings dictionary.
+
+    Raises:
+        SettingsError: If the settings file is missing a section.
     """
     raw_settings = readINI(settings_filename)
 
     try:
         settings_dict = parseINI(raw_settings["BotSettings"])
     except KeyError as kerr:
-        log.error(f"Settings file is missing section {kerr}")
+        log.error("Settings file is missing section %s", kerr)
         raise SettingsError(f"Settings file is missing section {kerr}") from kerr
 
     return settings_dict
 
 
 def copy_config_from_sample_if_not_exists(filename):
-    """Copy Sample config to config if config doesn't exist
-
-    If file exists, do nothing, else copy sample to file
+    """
+    Copies a sample configuration file to a new configuration file, only if the new file
+    does not already exist.
 
     Args:
-        filename (str): config filename
+        filename (str): The name of the new configuration file.
+
+    Returns:
+        str: The path of the new configuration file.
     """
     filepath = pathlib.Path(filename)
 

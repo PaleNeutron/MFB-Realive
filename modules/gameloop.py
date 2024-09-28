@@ -1,18 +1,24 @@
-import time
-import sys
-
-from .bounty import selectGroup, travelToLevel, goToEncounter
-from .travelpoint import travelpointSelection
-from .constants import UIElement, Button, Action
-from .image_utils import find_ellement
-from .game import defaultCase
-from .campfire import look_at_campfire_completed_tasks
-from .settings import jposition
-from .mouse_utils import move_mouse
-from .platforms import windowMP
-from .resolution import check_resolution
+"""
+This module contains the main logic for navigating the Mercenaries mode in Hearthstone.
+It provides functions to detect the current state of the game and progress through the various stages of gameplay.
+"""
 
 import logging
+import sys
+import time
+
+
+from modules.bounty import selectGroup, travelToLevel, goToEncounter
+from modules.travelpoint import travelpointSelection
+from modules.constants import UIElement, Button, Action
+from modules.image_utils import find_element
+from modules.game import defaultCase
+from modules.campfire import look_at_campfire_completed_tasks
+from modules.settings import jposition
+from modules.mouse_utils import move_mouse
+from modules.platforms import windowMP
+from modules.resolution import check_resolution
+from modules.reconnects import click_wipe_button, click_reconnect, choose_mode
 
 log = logging.getLogger(__name__)
 
@@ -26,63 +32,54 @@ def where():
     win_game_resolution = f"{width}x{height}"
     if not check_resolution(win_game_resolution):
         log.error(
-            f"Game window size ({win_game_resolution}) doesn't match your settings."
+            "Game window size (%s) doesn't match your settings.", win_game_resolution
         )
         sys.exit()
 
-    find_ellement(Button.join_button.filename, Action.move_and_click)
+    find_element(Button.join_button.filename, Action.move_and_click)
 
-    # Find PVE adventure payed, free or portal
+    if find_element(Button.choose_mode.filename, Action.screenshot):
+        choose_mode()
+
+
+    # Find PVE adventure paid, free or portal
     if (
-        find_ellement(UIElement.battle_portal.filename, Action.move_and_click)
-        or find_ellement(UIElement.battle.filename, Action.move_and_click)
-        or find_ellement(UIElement.free_battle.filename, Action.move_and_click)
+        find_element(UIElement.battle_portal.filename, Action.move_and_click)
+        or find_element(UIElement.battle.filename, Action.move_and_click)
+        or find_element(UIElement.free_battle.filename, Action.move_and_click)
     ):
         mx = jposition["mouse.neutral.x"]
         my = jposition["mouse.neutral.y"]
         move_mouse(windowMP(), windowMP()[2] / mx, windowMP()[3] / my)
-    #        time.sleep(3)
 
-    if find_ellement(UIElement.travelpoint.filename, Action.screenshot):
-        #        time.sleep(3)
+    if find_element(UIElement.travelpoint.filename, Action.screenshot):
         # Find the travel point and the mode (normal/heroic)
         travelpointSelection()
-    #        time.sleep(3)
 
-    if find_ellement(UIElement.bounties.filename, Action.screenshot):
-        #        time.sleep(3)
+    if find_element(UIElement.bounties.filename, Action.screenshot):
         travelToLevel()
         time.sleep(1)
 
-    if find_ellement(UIElement.team_selection.filename, Action.screenshot):
-        #        time.sleep(3)
+    if find_element(UIElement.team_selection.filename, Action.screenshot):
         selectGroup()
         time.sleep(1)
 
-    #    if find_ellement(Button.play.filename, Action.screenshot):
-    #        time.sleep(3)
-    #        goToEncounter()
-    #        # time.sleep(3)
-
-    #    if find_ellement(UIElement.view_party.filename, Action.screenshot):
-    #        nextlvl()
-
-    if find_ellement(UIElement.view_party.filename, Action.screenshot):
+    if find_element(UIElement.view_party.filename, Action.screenshot):
         goToEncounter()
 
-    if find_ellement(UIElement.campfire.filename, Action.screenshot):
-        #        time.sleep(2)
+    if find_element(UIElement.campfire.filename, Action.screenshot):
         look_at_campfire_completed_tasks()
-    #        time.sleep(3)
 
-    # Note: feature disabled because of enemy board detection needing
-    # to start log-scan before battle started
-    # Note: could work if log scan had something like a rewind scan
-    # if find_ellement(Button.num.filename, Action.screenshot):
-    #     selectCardsInHand()
+    if find_element(UIElement.partywipe.filename, Action.screenshot):
+        click_wipe_button()
+
+    if find_element(UIElement.reconnect_button.filename, Action.screenshot):
+        click_reconnect()
+
+    if find_element(UIElement.game_closed.filename, Action.screenshot):
+        game_closed()
 
     else:
         defaultCase()
-    #        time.sleep(3)
 
     return True

@@ -1,12 +1,13 @@
-import logging
-import logging.config
-
+"""
+Initialization script, handles logging, settings, and certain out strings.
+"""
 import configparser
+import logging.config
 
 log_config = {
     "version": 1,
     "root": {
-        "handlers": ["console"],
+        "handlers": [],  # Initialize as an empty list
         "level": "DEBUG",
     },
     "handlers": {
@@ -39,19 +40,22 @@ filelogs = False
 _config = configparser.ConfigParser()
 try:
     _config.read(_systsetting)
-    if _config._sections["BotSettings"]["logs"] == "True":
-        filelogs = True
+    if _config.has_section("BotSettings") and _config.has_option("BotSettings", "logs"):
+        if _config.getboolean("BotSettings", "logs"):
+            filelogs = True
 except Exception:
     pass
 
 try:
     _config.read(_usersetting)
-    if _config._sections["BotSettings"]["logs"] == "True":
-        filelogs = True
-    elif _config._sections["BotSettings"]["logs"] == "False":
-        filelogs = False
+    if _config.has_section("BotSettings") and _config.has_option("BotSettings", "logs"):
+        if _config.getboolean("BotSettings", "logs"):
+            filelogs = True
+        else:
+            filelogs = False
 except Exception:
     pass
+
 
 print(f"Logs: {filelogs}")
 if filelogs:

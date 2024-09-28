@@ -1,29 +1,61 @@
-import time
-import re
-from pathlib import Path
-import threading
+"""
+This module provides the LogHSMercs class for parsing and tracking game state changes
+from a specified Hearthstone Mercenaries log file. The class maintains the state of player's
+hand and board, as well as the enemy's board, and provides methods to access these states. It also
+supports real-time log file tracking through a separate thread, allowing the game state to be
+updated as new log entries are created.
+"""
+
 import logging
+import re
+import threading
+import time
+from pathlib import Path
+
 
 log = logging.getLogger(__name__)
 
 
+def __init__(self):
+    """
+    Constructs a LogHSMercs object. Opens the specified log file and prepares for
+    real-time tracking of game state changes.
+    Tracks cards in hand and on field.
+    Args:
+        logpath (str): Path to the Hearthstone Mercenaries log file.
+    """
+    self.__running = None
+    self.thread = None
+    self.logfile = None
+
+
 class LogHSMercs:
     def __init__(self, logpath):
-        """generator function that yields new lines in filelog to
-        follow cards in hand and on the battlefield
+        """
+        Constructs a LogHSMercs object. Opens the specified log file and prepares for
+        real-time tracking of game state changes.
+        Tracks cards in hand and on field.
+        Args:
+            logpath (str): Path to the Hearthstone Mercenaries log file.
         """
         self.logpath = logpath
+        # self.zonechange_finished = False
 
         if not Path(logpath).exists():
             log.info("Logfile 'Zone.log' doesn't exist. Waiting for it...")
         while not Path(logpath).exists():
             time.sleep(1)
 
+        self._initialize_logfile()
+        self._initialize_game_state()
+
+    def _initialize_logfile(self):
         self.filePos = None
         self.eof = False
         self.line = None
         self.logfile = open(self.logpath, "r", encoding="UTF-8")
 
+    def _initialize_game_state(self):
         self.cardsInHand = []
         self.myBoard = {}
         self.mercsId = {}
@@ -31,9 +63,17 @@ class LogHSMercs:
         self.enemiesBoard = {}
         self.enemiesId = {}
 
-        self.zonechange_finished = False
+    def track_game_state_changes(self):
+        # Placeholder for HSLog/HSreplay game states from Power.log
+        pass
 
     def find_battle_start_log(self):
+        """
+        Identifies the starting point of a battle in the log file. This is determined
+        by finding a specific pattern in the file's lines. The read position is then set to
+        this line for the upcoming tracking.
+        """
+
         line = self.logfile.readline()
         while line:
             if re.search(
@@ -48,141 +88,105 @@ class LogHSMercs:
             self.logfile.seek(self.filePos)
 
     def follow(self):
-        # go to the end of the file
-        # self.logfile.seek(0, os.SEEK_END)
+        """
+        Starts real-time tracking of the log file, continuously reading new lines and updating
+        the game state based on the parsed information.
+        """
+        zone_change_pattern1 = r".+? tag=ZONE_POSITION .+?entityName=(.+?) +id=(.+?) .+?zonePos=(.) cardId=.+? player=1\] .+? dstPos=(.)"
+        zone_change_pattern2 = r".+?entityName=(.+?) +id=(.+?) .+?zonePos=(.) cardId=.+? player=2\] .+? dstZoneTag=PLAY dstPos=(.)"
+        zone_change_pattern3 = r".+? tag=ZONE_POSITION .+?entityName=(.+?) +id=(.+?) .+?zonePos=(.) cardId=.+? player=2\] .+? dstPos=(.)"
+        hand_card_pattern = r".+?entityName=(.+?) +id=.+? .+?cardId=.+? player=3\] .+? dstZoneTag=HAND .+?"
+        zone_pos_pattern = r".+?entityName=.+? +id=.+? zone=PLAY zonePos=(.) .+?zone from FRIENDLY PLAY -> OPPOSING PLAY"
 
-        regexBoard = (
-            ".+? tag=ZONE_POSITION "
-            ".+?entityName=(.+?) +"
-            "id=(.+?) "
-            ".+?zonePos=(.) "
-            "cardId=.+? "
-            r"player=1\] .+? "
-            "dstPos=(.)"
-        )
-        regexEnemyBoard = (
-            ".+?entityName=(.+?) +"
-            "id=(.+?) "
-            ".+?zonePos=(.) "
-            "cardId=.+? "
-            r"player=2\] .+? "
-            "dstZoneTag=PLAY "
-            "dstPos=(.)"
-        )
-        regexEnemyBoardUpdate = (
-            ".+? tag=ZONE_POSITION "
-            ".+?entityName=(.+?) +"
-            "id=(.+?) "
-            ".+?zonePos=(.) "
-            "cardId=.+? "
-            r"player=2\] .+? "
-            "dstPos=(.)"
-        )
-        regexInHand = (
-            ".+?entityName=(.+?) +"
-            "id=.+ "
-            r".+?cardId=.+? player=3\] .+? "
-            "dstZoneTag=HAND .+?"
-        )
-        # D 14:25:59.2307890 ZoneChangeList.ProcessChanges() - processing index=4 change=powerTask=[power=[type=TAG_CHANGE entity=[id=5 cardId=LETL_006H_01 name=Lord Jaraxxus] tag=FAKE_ZONE value=3 ] complete=False] entity=[entityName=Lord Jaraxxus id=5 zone=SETASIDE zonePos=0 cardId=LETL_006H_01 player=3] srcZoneTag=INVALID srcPos= dstZoneTag=HAND dstPos=
-
-        regexGoToEnemy = (
-            ".+?entityName=.+? +"
-            "id=.+? zone=PLAY "
-            "zonePos=(.) "
-            ".+?zone from FRIENDLY PLAY -> OPPOSING PLAY"
-        )
-        # ZoneChangeList.ProcessChanges() - id=28 local=False [entityName=Spud M.E. 1 id=62 zone=PLAY zonePos=1 cardId=LETL_903t_01 player=2] zone from FRIENDLY PLAY -> OPPOSING PLAY
-
-        # start infinite loop to read log file
         while self.__running:
-            # read last line of file
+            # Read the last line of the file
             line = self.logfile.readline()
-            # sleep if file hasn't been updated
+            # Sleep if the file hasn't been updated
             if not line:
                 self.eof = True
                 time.sleep(0.1)
                 continue
 
-            if "ZoneChangeList.ProcessChanges() - processing" in line and re.search(
-                regexBoard, line
-            ):
-                (mercenary, mercId, srcpos, dstpos) = re.findall(regexBoard, line)[0]
-                self.mercsId[mercId] = mercenary
-                # srcpos = actual position.
-                # =0 if it hasn't any previous position
-                if (
-                    srcpos != "0"
-                    and srcpos in self.myBoard
-                    and self.myBoard[srcpos] == mercId
-                ):
-                    self.myBoard.pop(srcpos)
+            if "ZoneChangeList.ProcessChanges() - processing" in line:
+                if re.search(zone_change_pattern1, line):
+                    (mercenary, mercId, srcpos, dstpos) = re.findall(
+                        zone_change_pattern1, line
+                    )[0]
+                    self.mercsId[mercId] = mercenary
 
-                # dstpos = 0 if the card is going to GRAVEYARD
-                if dstpos != "0":
-                    self.myBoard[dstpos] = mercId
+                    if (
+                        srcpos != "0"
+                        and srcpos in self.myBoard
+                        and self.myBoard[srcpos] == mercId
+                    ):
+                        self.myBoard.pop(srcpos)
 
-            elif "ZoneChangeList.ProcessChanges() - processing" in line and re.search(
-                regexEnemyBoard, line
-            ):
-                (enemy, enemyId, srcpos, dstpos) = re.findall(regexEnemyBoard, line)[0]
-                self.enemiesId[enemyId] = enemy
-                # srcpos = actual position.
-                # =0 if it hasn't any previous position
-                if (
-                    srcpos != "0"
-                    and srcpos in self.enemiesBoard
-                    and self.enemiesBoard[srcpos] == enemyId
-                ):
-                    self.enemiesBoard.pop(srcpos)
+                    if dstpos != "0":
+                        self.myBoard[dstpos] = mercId
 
-                # dstpos = 0 if the card is going to GRAVEYARD
-                if dstpos != "0":
-                    self.enemiesBoard[dstpos] = enemyId
+                elif re.search(zone_change_pattern2, line):
+                    (enemy, enemyId, srcpos, dstpos) = re.findall(
+                        zone_change_pattern2, line
+                    )[0]
+                    self.enemiesId[enemyId] = enemy
 
-            elif "ZoneChangeList.ProcessChanges() - processing" in line and re.search(
-                regexEnemyBoardUpdate, line
-            ):
-                (enemy, enemyId, srcpos, dstpos) = re.findall(
-                    regexEnemyBoardUpdate, line
-                )[0]
-                self.enemiesId[enemyId] = enemy
-                # srcpos = actual position.
-                # =0 if it hasn't any previous position
-                if (
-                    srcpos != "0"
-                    and srcpos in self.enemiesBoard
-                    and self.enemiesBoard[srcpos] == enemyId
-                ):
-                    self.enemiesBoard.pop(srcpos)
+                    if (
+                        srcpos != "0"
+                        and srcpos in self.enemiesBoard
+                        and self.enemiesBoard[srcpos] == enemyId
+                    ):
+                        self.enemiesBoard.pop(srcpos)
 
-                # dstpos = 0 if the card is going to GRAVEYARD
-                if dstpos != "0":
-                    self.enemiesBoard[dstpos] = enemyId
-            elif "ZoneChangeList.ProcessChanges() - processing" in line and re.search(
-                regexInHand, line
-            ):
-                mercenary = re.findall(regexInHand, line)[0]
-                if mercenary not in self.cardsInHand:
-                    self.cardsInHand.append(mercenary)
+                    if dstpos != "0":
+                        self.enemiesBoard[dstpos] = enemyId
 
-            elif " ZoneChangeList.ProcessChanges() " in line and re.search(
-                regexGoToEnemy, line
-            ):
-                zonepos = re.findall(regexGoToEnemy, line)[0]
-                self.myBoard.pop(zonepos)
+                elif re.search(zone_change_pattern3, line):
+                    (enemy, enemyId, srcpos, dstpos) = re.findall(
+                        zone_change_pattern3, line
+                    )[0]
+                    self.enemiesId[enemyId] = enemy
 
-            elif "ZoneMgr.AutoCorrectZonesAfterServerChange()" in line:
-                self.zonechange_finished = True
+                    if (
+                        srcpos != "0"
+                        and srcpos in self.enemiesBoard
+                        and self.enemiesBoard[srcpos] == enemyId
+                    ):
+                        self.enemiesBoard.pop(srcpos)
 
+                    if dstpos != "0":
+                        self.enemiesBoard[dstpos] = enemyId
+
+                elif re.search(hand_card_pattern, line):
+                    mercenary = re.findall(hand_card_pattern, line)[0]
+                    if mercenary not in self.cardsInHand:
+                        self.cardsInHand.append(mercenary)
+
+                elif re.search(zone_pos_pattern, line):
+                    zonepos = re.findall(zone_pos_pattern, line)[0]
+                    self.myBoard.pop(zonepos)
+
+            # elif "ZoneMgr.AutoCorrectZonesAfterServerChange()" in line:
+            #     self.zonechange_finished = True
+
+    """
     def get_zonechanged(self):
+        
+        Checks if a zone change has been completed in the log file.
+
+        Returns:
+        bool: True if a zone change has occurred, otherwise False.
+        
         if self.zonechange_finished:
             self.zonechange_finished = False
             return True
         else:
             return False
+    """
 
     def start(self):
+        """
+        Begins real-time tracking of the log file by launching the follow method in a new thread.
+        """
         log.debug("Reading logfile: %s", self.logpath)
         self.__running = True
         t1 = threading.Thread(target=self.follow)
@@ -190,29 +194,59 @@ class LogHSMercs:
         t1.start()
 
     def stop(self):
-        # self.thread.stop()
+        """
+        Stops real-time tracking of the log file. This method also cleans up the player's hand and board
+        states and closes the log file.
+        """
+
         log.debug("Closing logfile: %s", self.logpath)
         self.__running = False
+        if self.thread is not None:
+            self.thread.join()  # Wait for the thread to finish
         self.cleanHand()
         self.cleanBoard()
         self.logfile.close()
 
     def cleanHand(self):
+        """
+        Clears the player's hand state.
+        """
         self.cardsInHand = []
 
     def getHand(self):
+        """
+        Retrieves the player's current hand.
+
+        Returns:
+            list: List of cards in the player's hand.
+        """
         return self.cardsInHand
 
     def cleanBoard(self):
+        """
+        Clears the player's and enemy's board states.
+        """
         self.myBoard = {}
         self.mercsId = {}
         self.enemiesBoard = {}
         self.enemiesId = {}
 
     def getMyBoard(self):
+        """
+        Retrieves the current state of the player's board.
+
+        Returns:
+            dict: Dictionary representing the player's board. Keys are the positions, and values are the corresponding card names.
+        """
         return {key: self.mercsId[self.myBoard[key]] for key in self.myBoard.keys()}
 
     def getEnemyBoard(self):
+        """
+        Retrieves the current state of the enemy's board.
+
+        Returns:
+            dict: Dictionary representing the enemy's board. Keys are the positions, and values are the corresponding card names.
+        """
         return {
             key: self.enemiesId[self.enemiesBoard[key]]
             for key in self.enemiesBoard.keys()

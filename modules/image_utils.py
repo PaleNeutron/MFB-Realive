@@ -1,30 +1,57 @@
+"""
+This module provides functions for image processing and finding elements on the screen.
+
+Functions:
+- get_resolution: Get the resolution of the screen.
+- resize: Resize an image.
+- get_gray_image: Load an OpenCV version of an image in memory and/or return it.
+- find_element: Find an object on the screen and perform actions.
+- find_element_from_file: Find element center from a template file.
+- part_screen: Take a screenshot for a part of the screen.
+- find_element_center_on_screen: Find element center on the screen.
+"""
+
+
 import logging
 import os.path
 import sys
 
 import cv2
-
-# needed as workaround for Linux
-# https://stackoverflow.com/questions/74856512/screenshot-error-xdefaultrootwindow-failed-after-closing-a-tkinter-toplevel
-# https://github.com/BoboTiG/python-mss/issues/220
 import mss
 import numpy as np
 
-from .constants import Action
-from .mouse_utils import move_mouse, move_mouse_and_click
-from .platforms import windowMP
-from .settings import jthreshold, settings_dict
+from modules.constants import Action
+from modules.mouse_utils import move_mouse, move_mouse_and_click
+from modules.platforms import windowMP
+from modules.settings import jthreshold, settings_dict
 
 sct = mss.mss()
-# workaround end ###
+# workaround end
+
+"""
+mss is needed as workaround for Linux
+    https://stackoverflow.com/questions/74856512/screenshot-error-xdefaultrootwindow-failed-after-closing-a-tkinter-toplevel
+    https://github.com/BoboTiG/python-mss/issues/220
+"""
 
 log = logging.getLogger(__name__)
 
 
+class ResolutionError(Exception):
+    """Exception raised for resolution-related errors."""
+
+
+class AspectRatioError(ResolutionError):
+    """Exception raised when the aspect ratio of the setting resolution and window resolution are different."""
+
+
 def get_resolution() -> tuple[str, int, int, float]:
     """
-    Get the resolution of the screen
-    return tuple(resolution, width, height, scale_size)
+    Fetches the screen resolution details.
+
+    Returns:
+    tuple: A tuple containing screen resolution (resolution, width, height, scale_size).
+    Raises exception if the setting resolution and windows resolution are not of the same aspect ratio.
     """
     try:
         resolution = settings_dict["resolution"]
@@ -32,23 +59,56 @@ def get_resolution() -> tuple[str, int, int, float]:
         setting_w, setting_h = int(setting_size[0]), int(setting_size[1])
         windows_w, windows_h = windowMP()[2], windowMP()[3]
         if round(windows_w / setting_w, 2) != round(windows_h / setting_h, 2):
-            raise Exception(
-                "setting resolution and windows resolution are not the same aspect ratio"
+            raise AspectRatioError(
+                "Setting resolution and windows resolution have different aspect ratios"
             )
+
         scale_size = setting_w / windows_w
         return resolution, setting_w, setting_h, scale_size
+    except KeyError as e:
+        log.error("Resolution setting not found in settings_dict: %s", e)
+        sys.exit(1)
+    except (IndexError, ValueError) as e:
+        log.error("Invalid resolution format: %s", e)
+        sys.exit(1)
+    except AspectRatioError as e:
+        log.error(
+            "Setting resolution and windows resolution have different aspect ratios: %s",
+            e,
+        )
+        sys.exit(1)
     except Exception as e:
-        log.error(f"the resolution {resolution} is not supported: {e}")
+        log.error("An unexpected error occurred: %s", e)
         sys.exit(1)
 
 
 def resize(img, width, height):
-    """resize an image"""
+    """
+    Resizes an image.
+
+    Args:
+    img (numpy.ndarray): The image to resize.
+    width (int): The width to resize to.
+    height (int): The height to resize to.
+
+    Returns:
+    numpy.ndarray: The resized image.
+    """
+
     return cv2.resize(img, (width, height), interpolation=cv2.INTER_CUBIC)
 
 
 def get_gray_image(file):
-    """load an OpenCV version of an image in memory and/or return it"""
+    """
+    Loads a grayscale OpenCV version of an image in memory or returns it if it's already in memory.
+
+    Args:
+    file (str): The file path of the image.
+
+    Returns:
+    numpy.ndarray: The grayscale image.
+    """
+
     if not hasattr(get_gray_image, "imagesInMemory"):
         get_gray_image.imagesInMemory = {}
 
@@ -58,17 +118,13 @@ def get_gray_image(file):
     # need to resize the image in memory
     if file not in get_gray_image.imagesInMemory:
         if not os.path.isfile(file):
-            log.error(f'Err: file "{file}" doesn\'t exist.')
+            log.error('Err: file "%s" doesn\'t exist.', file)
         get_gray_image.imagesInMemory[file] = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-
-        log.debug(f"images in memory : {len(get_gray_image.imagesInMemory)}")
-
+        log.debug("images in memory : %s", len(get_gray_image.imagesInMemory))
     return get_gray_image.imagesInMemory[file]
 
 
-def find_ellement(
-    file, action, threshold="-", new_screen=True, speed=settings_dict["bot_speed"]
-):
+def find_element(file, action, threshold="-", new_screen=True):
     """Find an object ('file') on the screen (UI, Button, ...)
         and do some actions ('action')
                 Screenshot Here  |    Screenshot Before  |  Actions   | Return
@@ -83,7 +139,6 @@ def find_ellement(
         file,
         new_screenshot=new_screen,
         threshold=threshold,
-        speed=speed,
     )
     if click_coords is not None:
         x, y = click_coords
@@ -93,16 +148,16 @@ def find_ellement(
             Action.screenshot,
         ]:
             return click_coords
-        elif action == Action.move:
+        if action == Action.move:
             window = windowMP()
             move_mouse(window, x, y)
             return True
-        elif action == Action.move_and_click:
+        if action == Action.move_and_click:
             # move mouse and click
             window = windowMP()
             move_mouse_and_click(window, x, y)
             return True
-    elif action in [Action.get_coords_part_screen, Action.get_coords]:
+    if action in [Action.get_coords_part_screen, Action.get_coords]:
         return None
     return False
 
@@ -111,21 +166,17 @@ def find_element_from_file(
     file,
     new_screenshot=True,
     threshold="-",
-    speed=settings_dict["bot_speed"],
 ):
-    """Find Element Center from template filename
+    """
+    Finds an element in the screen from a template file.
 
     Args:
-        file (str): filename of template
-        new_screenshot (bool, optional): Whether to take a new screenshot image or not.
-            Defaults to True.
-        threshold (str, optional): Threshold of whether a comparison is good enough.
-            Defaults to "-".
-        speed (int, optional): Time in seconds to sleep before comparison.
-            Defaults to settings_dict["bot_speed"].
+        file (str): The file path of the template.
+        new_screenshot (bool): Whether to take a new screenshot for matching. Defaults to True.
+        threshold (str): The threshold for template matching. Defaults to '-'.
 
     Returns:
-        (int, int): coordinates of center of element
+        tuple or None: The coordinates of the center of the element found or None if not found.
     """
 
     if threshold == "-":
@@ -173,11 +224,12 @@ def find_element_from_file(
     if click_coords is not None:
         click_coords = [click_coords[0] + left, click_coords[1] + top]
         log.info(
-            f"Found {file} ( {threshold} ) { click_coords[0] } { click_coords[1] }",
+            "Found %s ( %s ) %s %s", file, threshold, click_coords[0], click_coords[1]
         )
+
     else:
-        print(f"Waiting for... {file}\033[K", end="\r")
-        log.debug(f"Looked for {file} ( {threshold} )")
+        print("Waiting for... %s\033[K" % file, end="\r")
+        log.debug("Looked for %s ( %s )", file, threshold)
 
     return click_coords
 
@@ -188,13 +240,26 @@ def partscreen(
     top,
     left,
     debug_mode=False,
-    resolution=None,
     resize_width=None,
     resize_height=None,
     scale_size=1,
 ):
     """
-    take screeenshot for a part of the screen to find some part of the image
+    Takes a screenshot of a part of the screen.
+
+    Args:
+    x (int): The width of the part.
+    y (int): The height of the part.
+    top (int): The top position of the part.
+    left (int): The left position of the part.
+    debug_mode (bool): Whether to save the screenshot for debugging. Defaults to False.
+    resolution (str): The resolution setting. Defaults to None.
+    resize_width (int): The width to resize to. Defaults to None.
+    resize_height (int): The height to resize to. Defaults to None.
+    scale_size (float): The scaling factor for resizing. Defaults to 1.
+
+    Returns:
+    numpy.ndarray: The screenshot image.
     """
 
     # workaround for Linux  (read more info at the top of this file)
@@ -224,17 +289,19 @@ def partscreen(
 
 
 def find_element_center_on_screen(img, template, threshold=0, scale_size=1):
-    """Finds Element if on screen and returns center
+    """
+    Finds the center of an element on the screen.
 
     Args:
-        img (numpy.ndarray): full image of window
-        template (numpy.ndarray): smaller image we are looking for
-        threshold (int, optional): threshold to determine if match meets our standards.
-            Defaults to 0.
+    img (numpy.ndarray): The image of the screen.
+    template (numpy.ndarray): The image of the element to find.
+    threshold (float): The threshold for template matching. Defaults to 0.
+    scale_size (float): The scaling factor for resizing. Defaults to 1.
 
     Returns:
-        center_coords: center coordinates of the best match found
+    tuple or None: The coordinates of the center of the element found or None if not found.
     """
+
     result = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
     h = template.shape[0] // 2
     w = template.shape[1] // 2
