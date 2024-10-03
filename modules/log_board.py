@@ -12,7 +12,6 @@ import threading
 import time
 from pathlib import Path
 
-
 log = logging.getLogger(__name__)
 
 
@@ -168,20 +167,19 @@ class LogHSMercs:
             # elif "ZoneMgr.AutoCorrectZonesAfterServerChange()" in line:
             #     self.zonechange_finished = True
 
-    """
     def get_zonechanged(self):
-        
+        """
         Checks if a zone change has been completed in the log file.
 
         Returns:
         bool: True if a zone change has occurred, otherwise False.
+        """
         
         if self.zonechange_finished:
             self.zonechange_finished = False
             return True
         else:
             return False
-    """
 
     def start(self):
         """
@@ -238,7 +236,7 @@ class LogHSMercs:
         Returns:
             dict: Dictionary representing the player's board. Keys are the positions, and values are the corresponding card names.
         """
-        return {key: self.mercsId[self.myBoard[key]] for key in self.myBoard.keys()}
+        return {key: self.mercsId[self.myBoard[key]] for key in sorted(self.myBoard.keys())}
 
     def getEnemyBoard(self):
         """
@@ -249,5 +247,5 @@ class LogHSMercs:
         """
         return {
             key: self.enemiesId[self.enemiesBoard[key]]
-            for key in self.enemiesBoard.keys()
+            for key in sorted(self.enemiesBoard.keys())
         }

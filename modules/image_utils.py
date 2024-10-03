@@ -228,7 +228,7 @@ def find_element_from_file(
         )
 
     else:
-        print("Waiting for... %s\033[K" % file, end="\r")
+        log.info("Waiting for... %s\033[K" % file)
         log.debug("Looked for %s ( %s )", file, threshold)
 
     return click_coords

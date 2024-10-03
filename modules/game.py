@@ -7,12 +7,12 @@ import logging
 import sys
 import time
 
+from modules.constants import Action, Button, UIElement
 from modules.image_utils import find_element
-from modules.constants import Action, UIElement, Button
-from modules.settings import jposition
-from modules.mouse_utils import move_mouse, move_mouse_and_click, mouse_position
+from modules.mouse_utils import mouse_position, move_mouse, move_mouse_and_click
 from modules.platforms import windowMP
 from modules.reconnects import click_reconnect, game_closed
+from modules.settings import jposition
 
 log = logging.getLogger(__name__)
 
@@ -60,13 +60,13 @@ def defaultCase():
         my = jposition["mouse.neutral.y"]
         move_mouse_and_click(windowMP(), windowMP()[2] / mx, windowMP()[3] / my)
         move_mouse(windowMP(), x, y)
-    if find_element(Button.reconnect_button.filename, Action.move_and_click):
+    if find_element(UIElement.reconnect_button.filename, Action.move_and_click):
         log.info("Game disconnected...attempting reconnect.")
         click_reconnect()
         time.sleep(10)
         click_reconnect()
         time.sleep(10)
         click_reconnect()
-    if find_element(Button.game_closed.filename, Action.move_and_click):
+    if find_element(UIElement.game_closed.filename, Action.move_and_click):
         game_closed()
         log.info("Game closed...attempting to re-open Hearthstone.")

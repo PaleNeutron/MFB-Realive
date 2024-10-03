@@ -1,0 +1,57 @@
+## DONT' MODIFY THIS FILE
+## create (or copy "combo.sample.ini" into) "combo.ini" in "conf/user/" directory
+[Mercenary]
+Antonidas=1
+; Anduin Wrynn=1,2
+Baron Geddon=2
+Ragnaros=1
+Alexstrasza=1
+Cookie, the Cook=1
+; Blademaster Samuro=1,3
+; Blink Fox=1,1,2
+; Bru'kan=1,1,3
+; Cairne Bloodhoof=1
+; Cariel Roame=1,2
+; Chi-Ji=1,1,3
+; Cookie, the Cook=1,2
+; Cornelius Roame=1,2
+; Diablo=1,2,3,2,3,2,3
+; Garrosh Hellscream=1,3
+; Grommash Hellscream=2,3
+; Guff Runetotem=2
+Jaina Proudmoore=2,3
+; King Krush=1,2
+; Kurtrus Ashfallen=1,3,2,3,2
+; Mannoroth=2,3
+; Millhouse Manastorm=1,2,3
+; Morgl the Oracle=1,2
+; Mr. Smite=1
+; Natalie Seline=1,3
+; Niuzao=1,3
+; Old Murk-Eye=1,2,3
+; Prophet Velen=1,3
+; Rathorian=1
+; Rexxar=1,2
+; Rokara=1,2
+; Sinestra=1,3
+; Tamsin Roame=1,2,3
+; Vanessa VanCleef=1,2
+; Vanndar Stormpike=1,1,3
+; Varden Dawngrasp=1,2
+; Vol'jin=1,2
+
+[Neutral]
+Arcane Ward=0
+Blue Portal=0
+Eudora's Cannon=0
+Imp Familiar=2
+Healing Totem=0
+Jade Golem=0
+Lesser Fire Elemental=2
+Mukla's Big Brother=0
+Phantasmal Image=0
+Portable Ice Wall=0
+Raven Familiar=2
+Stoneclaw Totem=0
+Stonemaul Banner=2
+Warlord Parjesh=0

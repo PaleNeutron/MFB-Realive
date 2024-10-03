@@ -8,22 +8,22 @@ import random
 import sys
 import time
 
-from modules.platforms import windowMP
-from modules.mouse_utils import (
-    move_mouse_and_click,
-    move_mouse,
-    mouse_position,
-    mouse_click,
-    MOUSE_RANGE,
-)
-from modules.constants import UIElement, Button, Action
-from modules.image_utils import find_element
-from modules.game import waitForItOrPass, defaultCase
-from modules.encounter import selectCardsInHand
 from modules.campfire import look_at_campfire_completed_tasks
-from modules.settings import settings_dict, jthreshold
-from modules.treasure import chooseTreasure
+from modules.constants import Action, Button, UIElement
+from modules.encounter import selectCardsInHand
+from modules.game import defaultCase, waitForItOrPass
+from modules.image_utils import find_element
+from modules.mouse_utils import (
+    MOUSE_RANGE,
+    mouse_click,
+    mouse_position,
+    move_mouse,
+    move_mouse_and_click,
+)
 from modules.notification import send_notification, send_slack_notification
+from modules.platforms import windowMP
+from modules.settings import jthreshold, settings_dict
+from modules.treasure import chooseTreasure
 
 log = logging.getLogger(__name__)
 
@@ -153,7 +153,7 @@ def nextlvl():
         # (like after the final boss)
         elif find_element(UIElement.view_party.filename, Action.screenshot):
             search_battle_list = []
-            battletypes = ["fighter", "protector", "caster"]
+            battletypes = ["protector", "fighter", "caster"]
             random.shuffle(battletypes)
             boontypes = ["boonfighter", "boonprotector", "booncaster"]
             random.shuffle(boontypes)
@@ -179,6 +179,7 @@ def nextlvl():
                     else:
                         search_battle_list.append((x, y))
             if search_battle_list:
+                log.info(f"{search_battle_list=}")
                 x, y = search_battle_list.pop(0)
                 move_mouse_and_click(windowMP(), x, y)
                 time.sleep(2)
@@ -305,8 +306,14 @@ def goToEncounter():
     time.sleep(2)
     travelEnd = False
 
+    fight_count = 0
+
     while not travelEnd:
         if find_element(Button.play.filename, Action.screenshot):
+            if settings_dict["max_fights"] != 0 and fight_count >= settings_dict["max_fights"]:
+                time.sleep(1)
+                quitBounty()
+                break                
             travelEnd = check_boss_battle()
             if travelEnd:
                 break
@@ -325,6 +332,7 @@ def goToEncounter():
             else:
                 travelEnd = handle_unknown()
 
+            fight_count += 1
         else:
             if not nextlvl():
                 break

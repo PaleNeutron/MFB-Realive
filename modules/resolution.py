@@ -11,10 +11,11 @@ Note: This module requires the 'cv2' and 'os' libraries.
 
 import logging
 import os
+
 import cv2
+
 from modules.file_utils import copy_dir_and_func_files
 from modules.settings import settings_dict
-
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ def resize_image(srcfile, dstfile, params=[]):
     cv2.imwrite(dstfile, imgresized)
 
 
-def check_resolution(window):
+def check_resolution(real_w, real_h):
     """
     Check if the window resolution matches the settings resolution.
     """
@@ -55,8 +56,18 @@ def check_resolution(window):
     # margin_error=0.1
     # windowx, windowy = window.split("x")
     # settingx, setting = setting.split("x")
-
-    return window == settings_dict["resolution"]
+    x, h = settings_dict["resolution"].split("x")
+    x=int(x)
+    h=int(h)
+    tolerance = 3
+    if abs(real_w - x) >= tolerance and abs(real_h - h) >= tolerance:
+        log.error(
+            "Game window size (%s) doesn't match your settings (%s)",
+            f"{real_w}x{real_h}",
+            settings_dict["resolution"],
+        )
+    return True
+        
 
 
 def gen_images_new_resolution():

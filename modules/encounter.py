@@ -6,14 +6,14 @@ import logging
 import random
 import re
 import time
-from typing import List
 from collections import namedtuple
+from typing import List
 
 from .constants import Action, Button, UIElement
 from .game import countdown, waitForItOrPass
 from .image_utils import find_element
 from .log_board import LogHSMercs
-from .mouse_utils import move_mouse, move_mouse_and_click, mouse_click
+from .mouse_utils import mouse_click, move_mouse, move_mouse_and_click
 from .platforms import windowMP
 from .settings import ability_order, mercsAbilities, mercslist, settings_dict
 
@@ -729,6 +729,12 @@ def battle(zoneLog=None):
             # looks for your Mercenaries on board thanks to log file
             mercenaries = zoneLog.getMyBoard()
             log.info("Round %s :  your board %s", raund, mercenaries)
+
+            # mercenaries = [
+            #     "Antonidas",
+            #     "Baron Geddon",
+            #     "Ragnaros"
+            # ]
 
             # click on neutral zone to avoid problem with screenshot
             # when you're looking for red/green/blue enemies

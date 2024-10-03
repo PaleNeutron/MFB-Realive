@@ -1,6 +1,6 @@
-import datetime
 import logging
 import os
+from datetime import datetime
 
 """
 This module provides functions related to choosing treasures after a battle/fight.
@@ -25,7 +25,7 @@ from modules.platforms import windowMP
 from modules.settings import settings_dict, treasures_priority
 
 from .constants import Action, Button, UIElement
-from .image_utils import find_ellement, get_resolution, partscreen
+from .image_utils import get_resolution, partscreen
 from .mouse_utils import move_mouse_and_click
 from .platforms import windowMP
 from .settings import settings_dict, treasures_priority
@@ -52,7 +52,7 @@ def chooseTreasure():
     # capture current screen and save it to logs/treasures
     ## first ensure the directory exists
     ## then capture the screen
-    if log.level == logging.DEBUG:
+    if log.level <= logging.DEBUG:
         treasure_log_dir = "logs/treasures"
         if not os.path.exists(treasure_log_dir):
             os.makedirs(treasure_log_dir)

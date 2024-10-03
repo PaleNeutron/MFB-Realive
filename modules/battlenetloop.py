@@ -10,8 +10,9 @@ import time
 
 import pyautogui
 import pygetwindow as gw
+from win32 import win32process
 
-from modules.constants import Button, Action
+from modules.constants import Action, Button
 from modules.image_utils import find_element
 
 log = logging.getLogger(__name__)
@@ -29,13 +30,14 @@ def bring_to_focus_windows():
         output = subprocess.check_output(
             "wmic process where (name='Battle.net.exe' or name='Battle.net') get ProcessId", shell=True).decode(
             "utf-8")
-        pid = int(re.findall('\d+', output)[0])
+        pid = int(re.findall(r'\d+', output)[0])
 
         # Get list of all windows that match the pid
         windows = gw.getAllWindows( )
 
         for window in windows:
-            if window.processId == pid:
+            _threadid,wpid = win32process.GetWindowThreadProcessId(window._hWnd)
+            if wpid == pid:
                 # Use the PyAutoGUI library to move the mouse to the center of the window
                 pyautogui.moveTo(window.left + window.width / 2, window.top + window.height / 2)
 
@@ -56,7 +58,7 @@ def bring_to_focus_linux():
     try:
         # Use ps aux to get the process id
         output = subprocess.check_output("ps aux | grep -E 'Battle.net|Battle.net.exe'", shell=True).decode("utf-8")
-        pid = int(re.findall('\d+', output)[0])
+        pid = int(re.findall(r'\d+', output)[0])
 
         # Use wmctrl and xdotool to bring the window to the foreground
         subprocess.call(['wmctrl', '-ia', str(pid)])
@@ -66,10 +68,10 @@ def bring_to_focus_linux():
         log.error(f"Failed to bring window with PID Battle.net or Battle.net.exe to focus. Error: {str(e)}")
 
 
-if platform.system( ) == 'Windows':
-    bring_to_focus_windows( )
-elif platform.system( ) == 'Linux':
-    bring_to_focus_linux( )
+# if platform.system( ) == 'Windows':
+#     bring_to_focus_windows( )
+# elif platform.system( ) == 'Linux':
+#     bring_to_focus_linux( )
 
 
 def enter_from_battlenet():

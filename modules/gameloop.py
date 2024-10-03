@@ -7,18 +7,22 @@ import logging
 import sys
 import time
 
-
-from modules.bounty import selectGroup, travelToLevel, goToEncounter
-from modules.travelpoint import travelpointSelection
-from modules.constants import UIElement, Button, Action
-from modules.image_utils import find_element
-from modules.game import defaultCase
+from modules.bounty import goToEncounter, selectGroup, travelToLevel
 from modules.campfire import look_at_campfire_completed_tasks
-from modules.settings import jposition
+from modules.constants import Action, Button, UIElement
+from modules.game import defaultCase
+from modules.image_utils import find_element
 from modules.mouse_utils import move_mouse
 from modules.platforms import windowMP
+from modules.reconnects import (
+    choose_mode,
+    click_reconnect,
+    click_wipe_button,
+    game_closed,
+)
 from modules.resolution import check_resolution
-from modules.reconnects import click_wipe_button, click_reconnect, choose_mode
+from modules.settings import jposition
+from modules.travelpoint import travelpointSelection
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +34,7 @@ def where():
     # Check Hearthstone resolution and compare it to settings resolution
     _, _, width, height = windowMP()
     win_game_resolution = f"{width}x{height}"
-    if not check_resolution(win_game_resolution):
+    if not check_resolution(width, height):
         log.error(
             "Game window size (%s) doesn't match your settings.", win_game_resolution
         )

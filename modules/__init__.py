@@ -7,7 +7,7 @@ import logging.config
 log_config = {
     "version": 1,
     "root": {
-        "handlers": [],  # Initialize as an empty list
+        "handlers": ["console"],  # Initialize as an empty list
         "level": "DEBUG",
     },
     "handlers": {
@@ -30,7 +30,7 @@ log_config = {
             "format": "%(asctime)s [%(levelname)-8s] %(module)s : %(message)s",
             "datefmt": "%d-%m-%Y %I:%M:%S",
         },
-        "old_out": {"format": "%(message)s"},
+        "old_out": {"format": "%(asctime)s %(message)s"},
     },
 }
 
