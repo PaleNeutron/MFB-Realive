@@ -40,6 +40,8 @@ def where():
         )
         sys.exit()
 
+    find_element(UIElement.click_to_start.filename, Action.move_and_click)
+
     find_element(Button.join_button.filename, Action.move_and_click)
 
     if find_element(Button.choose_mode.filename, Action.screenshot):

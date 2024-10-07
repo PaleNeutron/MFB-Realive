@@ -41,7 +41,7 @@ def main():
             log.info("Keyboard Interrupt %s", kerr)
             sys.exit(0)
         except Exception as error:
-            log.error("Error: %s", error)
+            log.exception("Error: %s", error)
             time.sleep(1)
 
 

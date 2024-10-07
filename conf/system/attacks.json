@@ -16,7 +16,11 @@
     },
     "Bwonsamdi": {
         "1": true,
-        "2": "chooseone3",
+        "2": [
+            true,
+            true,
+            true
+        ],
         "3": true
     },
     "Cairne Bloodhoof": {
@@ -52,7 +56,11 @@
     "Garona Halforcen": {
         "1": true,
         "2": false,
-        "3": "chooseone3"
+        "3": [
+            true,
+            true,
+            true
+        ]
     },
     "Garrosh Hellscream": {
         "1": true,
@@ -107,7 +115,10 @@
     "Malfurion Stormrage": {
         "1": true,
         "2": true,
-        "3": "chooseone2"
+        "3": [
+            true,
+            true
+        ]
     },
     "Mannoroth": {
         "1": true,
@@ -127,7 +138,11 @@
     "Murloc Holmes": {
         "1": true,
         "2": "friend",
-        "3": "chooseone3"
+        "3": [
+            true,
+            true,
+            true
+        ]
     },
     "Niuzao": {
         "1": true,
@@ -151,7 +166,11 @@
     },
     "Sir Finley": {
         "1": true,
-        "2": "chooseone3",
+        "2": [
+            true,
+            true,
+            true
+        ],
         "3": "friend"
     },
     "Sneed": {
@@ -162,7 +181,11 @@
     "Tess Greymane": {
         "1": true,
         "2": "friend",
-        "3": "chooseone3"
+        "3": [
+            true,
+            true,
+            true
+        ]
     },
     "The Lich King": {
         "1": true,
@@ -291,7 +314,10 @@
     },
     "Jandice Barov": {
         "1": false,
-        "2": "chooseone2",
+        "2": [
+            true,
+            true
+        ],
         "3": false
     },
     "Khadgar": {
@@ -302,11 +328,19 @@
     "Archmage Khadgar": {
         "1": true,
         "2": true,
-        "3": "chooseone3"
+        "3": [
+            true,
+            true,
+            true
+        ]
     },
     "Kazakus, Golem Shaper": {
         "1": false,
-        "2": "chooseone3",
+        "2": [
+            true,
+            true,
+            true
+        ],
         "3": true
     },
     "Korrak the Bloodrager": {
@@ -325,7 +359,11 @@
         "3": false
     },
     "Lorewalker Cho": {
-        "1": "chooseone3",
+        "1": [
+            true,
+            true,
+            true
+        ],
         "2": false,
         "3": false
     },
@@ -432,7 +470,10 @@
     "Balinda Stonehearth": {
         "1": true,
         "2": true,
-        "3": "chooseone2"
+        "3": [
+            false,
+            false
+        ]
     },
     "Blademaster Samuro": {
         "1": true,
@@ -466,7 +507,10 @@
     },
     "Eudora": {
         "1": true,
-        "2": "chooseone2",
+        "2": [
+            true,
+            true
+        ],
         "3": "friend"
     },
     "Illidan Stormrage": {
@@ -506,7 +550,10 @@
     },
     "Murky": {
         "1": true,
-        "2": "chooseone2",
+        "2": [
+            true,
+            true
+        ],
         "3": false
     },
     "Mutanus": {
@@ -536,7 +583,11 @@
     },
     "Rexxar": {
         "1": true,
-        "2": "chooseone3",
+        "2": [
+            true,
+            true,
+            true
+        ],
         "3": true
     },
     "Rokara": {
@@ -546,7 +597,11 @@
     },
     "Scabbs Cutterbutter": {
         "1": true,
-        "2": "chooseone3",
+        "2": [
+            true,
+            true,
+            true
+        ],
         "3": true
     },
     "Sinestra": {
@@ -563,11 +618,6 @@
         "1": true,
         "2": false,
         "3": false
-    },
-    "Tess Greymane": {
-        "1": true,
-        "2": "friend",
-        "3": "chooseone3"
     },
     "Tirion Fordring": {
         "1": true,
@@ -616,7 +666,18 @@
     },
     "Ysera": {
         "1": true,
-        "2": "chooseone3",
-        "3": "chooseone2:friend"
+        "2": [
+            true,
+            true,
+            true
+        ],
+        "3": [
+            "friend",
+            "friend"
+        ]
+    },
+    "Spud M.E.": {
+        "1": false,
+        "2": false
     }
 }

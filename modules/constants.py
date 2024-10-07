@@ -73,7 +73,8 @@ class UIElement(ImageFragment):
     """
     An enumeration of UI elements.
     """
-
+    
+    click_to_start = "click_to_start"
     game_closed = "closed_sign"
     closed_sign = "closed_sign"
     partywipe = "wipe_button"
@@ -117,6 +118,7 @@ class UIElement(ImageFragment):
     red = "red"
     replace_grey = "take_grey"
     reward_chest = "reward_chest"
+    choose_party = "choose_party"
     sob = "sob"
     spirithealer = "spirithealer"
     take_grey = "take_grey"

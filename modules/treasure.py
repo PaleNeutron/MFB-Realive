@@ -25,7 +25,7 @@ from modules.platforms import windowMP
 from modules.settings import settings_dict, treasures_priority
 
 from .constants import Action, Button, UIElement
-from .image_utils import get_resolution, partscreen
+from .image_utils import get_resolution, partscreen, save_screenshot
 from .mouse_utils import move_mouse_and_click
 from .platforms import windowMP
 from .settings import settings_dict, treasures_priority
@@ -58,25 +58,16 @@ def chooseTreasure():
             os.makedirs(treasure_log_dir)
         
         ## capture the screen
-        log.debug("Capturing screen for treasure selection")
-        resolution, width, height, scale_size = get_resolution()
-        part_Image = partscreen(
-                windowMP()[2],
-                windowMP()[3],
-                windowMP()[1],
-                windowMP()[0],
-                resize_width=width,
-                resize_height=height,
-            )
         time_stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        cv2.imwrite(f"{treasure_log_dir}/{time_stamp}.png", part_Image)
+        fn = f"{treasure_log_dir}/{time_stamp}.png"
+        save_screenshot(fn)
 
     while not treasures_queue.empty():
         next_treasure = treasures_queue.get()[1]
 
         treasure = str(f"{TREASURES_DIR}/{next_treasure}.png")
 
-        if find_element(treasure, Action.move_and_click):
+        if find_element(treasure, Action.move_and_click, threshold=0.88):
             time.sleep(1)
             break
     else:

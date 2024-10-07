@@ -59,10 +59,7 @@ def get_resolution() -> tuple[str, int, int, float]:
         setting_w, setting_h = int(setting_size[0]), int(setting_size[1])
         windows_w, windows_h = windowMP()[2], windowMP()[3]
         if round(windows_w / setting_w, 2) != round(windows_h / setting_h, 2):
-            raise AspectRatioError(
-                "Setting resolution and windows resolution have different aspect ratios"
-            )
-
+            log.warning(f"Setting resolution: {resolution} | Window resolution: {windows_w}x{windows_h}")
         scale_size = setting_w / windows_w
         return resolution, setting_w, setting_h, scale_size
     except KeyError as e:
@@ -111,6 +108,8 @@ def get_gray_image(file):
 
     if not hasattr(get_gray_image, "imagesInMemory"):
         get_gray_image.imagesInMemory = {}
+    if not hasattr(get_gray_image, "maskInMemory"):
+        get_gray_image.maskInMemory = {}
 
     # To Do : to resize the image so we can support other resolutions
     # screenshots was made on a 1920x1080 screen resolution
@@ -121,10 +120,24 @@ def get_gray_image(file):
             log.error('Err: file "%s" doesn\'t exist.', file)
         get_gray_image.imagesInMemory[file] = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
         log.debug("images in memory : %s", len(get_gray_image.imagesInMemory))
-    return get_gray_image.imagesInMemory[file]
+    # if file not in get_gray_image.maskInMemory:
+    #     # read alpha channel
+    #     image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+    #     try:
+    #         if image.shape[2] == 4:
+    #             alpha_channel = image[:, :, 3]
+    #             # save the mask in memory
+    #             get_gray_image.maskInMemory[file] = alpha_channel
+    #         else:
+    #             # no alpha channel
+    #             get_gray_image.maskInMemory[file] = None
+    #     except IndexError:
+    #         # no alpha channel
+    #         get_gray_image.maskInMemory[file] = None
+    return get_gray_image.imagesInMemory[file], get_gray_image.maskInMemory.get(file)
 
 
-def find_element(file, action, threshold="-", new_screen=True):
+def find_element(file, action=Action.get_coords, threshold="-", new_screen=True):
     """Find an object ('file') on the screen (UI, Button, ...)
         and do some actions ('action')
                 Screenshot Here  |    Screenshot Before  |  Actions   | Return
@@ -217,9 +230,9 @@ def find_element_from_file(
         log.error(f'Err: file "{file_path}" doesn\'t exist.')
         return None
     
-    template = get_gray_image(file_path)
+    template, mask = get_gray_image(file_path)
 
-    click_coords = find_element_center_on_screen(img, template, threshold, scale_size)
+    click_coords = find_element_center_on_screen(img, template, mask, threshold, scale_size)
 
     if click_coords is not None:
         click_coords = [click_coords[0] + left, click_coords[1] + top]
@@ -288,7 +301,7 @@ def partscreen(
     return partImg
 
 
-def find_element_center_on_screen(img, template, threshold=0, scale_size=1):
+def find_element_center_on_screen(img, template, mask, threshold=0, scale_size=1):
     """
     Finds the center of an element on the screen.
 
@@ -302,7 +315,7 @@ def find_element_center_on_screen(img, template, threshold=0, scale_size=1):
     tuple or None: The coordinates of the center of the element found or None if not found.
     """
 
-    result = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
+    result = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED, mask=mask)
     h = template.shape[0] // 2
     w = template.shape[1] // 2
     _, max_val, _, max_loc = cv2.minMaxLoc(result)
@@ -312,3 +325,22 @@ def find_element_center_on_screen(img, template, threshold=0, scale_size=1):
         if max_val > threshold
         else None
     )
+
+def save_screenshot(file_full_path):
+    """
+    Saves a screenshot to a file.
+
+    Args:
+    file (str): The file path to save the screenshot to.
+    """
+    ## capture the screen
+    resolution, width, height, scale_size = get_resolution()
+    part_Image = partscreen(
+            windowMP()[2],
+            windowMP()[3],
+            windowMP()[1],
+            windowMP()[0],
+            resize_width=width,
+            resize_height=height,
+        )
+    cv2.imwrite(file_full_path, part_Image)

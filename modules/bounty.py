@@ -154,9 +154,9 @@ def nextlvl():
         elif find_element(UIElement.view_party.filename, Action.screenshot):
             search_battle_list = []
             battletypes = ["protector", "fighter", "caster"]
-            random.shuffle(battletypes)
+            # random.shuffle(battletypes)
             boontypes = ["boonfighter", "boonprotector", "booncaster"]
-            random.shuffle(boontypes)
+            # random.shuffle(boontypes)
             encountertypes = battletypes + boontypes
             battletypes.append("elite")
             encountertypes.append("elite")
@@ -181,6 +181,7 @@ def nextlvl():
             if search_battle_list:
                 log.info(f"{search_battle_list=}")
                 x, y = search_battle_list.pop(0)
+                mouse_click("right")
                 move_mouse_and_click(windowMP(), x, y)
                 time.sleep(2)
             else:
@@ -269,7 +270,7 @@ def handle_win():
             log.info("goToEncounter : " "Boss defeated. Time for REWARDS !!!")
             collect()
             return True
-
+    move_mouse(windowMP(), windowMP()[2] / 10, windowMP()[3] / 2)
     return False
 
 
@@ -366,6 +367,7 @@ def travelToLevel(page="next"):
         send_slack_notification(
             json.dumps({"text": "Starting %s bounty." % settings_dict["location"]})
         )
+        time.sleep(0.3)
         retour = True
     elif page == "next":
         if find_element(Button.arrow_next.filename, Action.move_and_click):
@@ -393,22 +395,31 @@ def selectGroup():
 
     log.debug("selectGroup : entering")
 
+    group = settings_dict.get("group", 1)
+    group -= 1
+
+    # group position is 3*3 grid
+    # x from 430 to 978 of 1920
+    # y from 340 to 658 of 1080
+    window_width = windowMP()[2]
+    window_height = windowMP()[3]
+    width_ratio = window_width / 1920
+    height_ratio = window_height / 1080
+    x_start = 430 * width_ratio
+    y_start = 340 * height_ratio
+    x_offset = (978 - 430) / 2 * width_ratio
+    y_offset = (658 - 340) / 2 * height_ratio
+    group_x = x_start + x_offset * (group % 3)
+    group_y = y_start + y_offset * (group // 3)
+    
+
     # bad code but easily works
     # need to change it later to have a better solution
-    group_name_custom = pathlib.PurePath(
-        settings_dict["user_files_dir"],
-        settings_dict["resolution"],
-        Button.group_name.filename,
-    ).as_posix()
 
-    group_name = (
-        f"../../{group_name_custom}"
-        if pathlib.Path(group_name_custom).exists()
-        else Button.group_name.filename
-    )
-    # end of the section to replace #
-
-    if find_element(group_name, Action.move_and_click):
+    if find_element(UIElement.choose_party.filename, Action.get_coords):
+        move_mouse_and_click(windowMP(), group_x, group_y)
+        time.sleep(0.2)
+        mouse_click()
         find_element(Button.choose_team.filename, Action.move_and_click)
         move_mouse(windowMP(), windowMP()[2] / 1.5, windowMP()[3] / 2)
         waitForItOrPass(Button.lockin, 3)

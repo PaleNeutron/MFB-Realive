@@ -13,13 +13,15 @@ Classes:
   window management functions using the win32gui library.
 """
 
-import re
 import logging
-import win32gui
+import re
+
 import win32com.client as win32
+import win32gui
 from win32api import GetSystemMetrics
-from modules.platforms.window_managers.base import WindowMgr
+
 from modules.platforms.platforms import find_os
+from modules.platforms.window_managers.base import WindowMgr
 
 log = logging.getLogger(__name__)
 
@@ -79,7 +81,7 @@ class WindowMgrWindowsWin32Gui(WindowMgr):
         WINDOW_NAME = win32gui.GetWindowText(win32gui.GetForegroundWindow())
 
         # Judge which window, fake the BN resolution
-        if WINDOW_NAME == "Battle.net" or "Battle.net.exe" in WINDOW_NAME:
+        if WINDOW_NAME == "Battle.net" or "Battle.net.exe" or "战网" in WINDOW_NAME:
             return (0, 0, GetSystemMetrics(0), GetSystemMetrics(1))
         else:
             left, top, width, height = win32gui.GetClientRect(self._handle)
