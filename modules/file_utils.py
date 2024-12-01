@@ -71,7 +71,7 @@ def readINI(inifile):
     """Reads an INI file and returns the data."""
     config = configparser.ConfigParser()
     try:
-        config.read(inifile)
+        config.read(inifile, encoding="utf-8")
     except configparser.DuplicateOptionError as err:
         log.error("Error while reading ini file %s", err)
         raise SettingsError(f"Duplicate Option in Settings File: {err}") from err

@@ -309,7 +309,9 @@ def goToEncounter():
 
     fight_count = 0
 
+    step_count = 0
     while not travelEnd:
+        # TODO: infinite loop if the game is stuck
         if find_element(Button.play.filename, Action.screenshot):
             if settings_dict["max_fights"] != 0 and fight_count >= settings_dict["max_fights"]:
                 time.sleep(1)
@@ -337,6 +339,10 @@ def goToEncounter():
         else:
             if not nextlvl():
                 break
+            else:
+                step_count += 1
+                if step_count > 30:
+                    break
 
     for x in range(60):
         if not find_element(UIElement.bounties.filename, Action.screenshot):

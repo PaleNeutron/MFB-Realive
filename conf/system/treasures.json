@@ -1,4 +1,13 @@
 {
+    "artillery_strike": 1,
+    "short_focused_bomb": 98,
+    "iron_pipe": 2,
+    "cant_touch_this": 1,
+    "revealed_in_moonlight": 1,
+    "hostile_takeover" : 1,
+    "portable_ice_wall": 1,
+    "stonehearth_salvation": 1,
+    "infernal_combustion": 1,
     "alliance_war_banner": 11,
     "atiesh": 4,
     "banner_of_the_horde": 12,
@@ -35,8 +44,5 @@
     "spiked_shield": 16,
     "warchiefs_blessing": 3,
     "windfury": 2,
-    "windfury_totem": 1,
-    "stonehearth_salvation": 1,
-    "infernal_combustion": 1,
-    "portable_ice_wall": 1
+    "windfury_totem": 1
 }

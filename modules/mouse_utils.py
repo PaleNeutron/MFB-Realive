@@ -12,14 +12,17 @@ Constants:
 - MOUSE_RANGE: The range of random mouse movement.
 """
 
-import time
 import random
-import pyautogui
+import sys
+import time
 
+from modules.base_mouse_func import click, moveTo, position, scroll
 from modules.humanclicker import HumanClicker
 from modules.humancurve import HumanCurve
 
 MOUSE_RANGE = 2
+
+
 
 
 def mouse_click(btn="left"):
@@ -29,7 +32,7 @@ def mouse_click(btn="left"):
     Args:
         btn (str, optional): Specifies the button to click. Defaults to "left".
     """
-    pyautogui.click(button=btn)
+    click(button=btn)
 
 
 def mouse_scroll(s):
@@ -43,7 +46,7 @@ def mouse_scroll(s):
         return
     step = s // abs(s)
     for _ in range(0, s, step):
-        pyautogui.scroll(step)
+        scroll(step)
 
 
 def mouse_position(window):
@@ -56,7 +59,7 @@ def mouse_position(window):
     Returns:
         tuple: The current mouse position relative to the window's top left corner.
     """
-    x, y = pyautogui.position( )
+    x, y = position()
     return x - window[0], y - window[1]
 
 
@@ -71,7 +74,7 @@ def move_mouse_and_click(window, x, y):
     """
     move_mouse(window, x, y)
     time.sleep(0.1)
-    pyautogui.click( )
+    click()
 
 
 def move_mouse(window, x, y):
@@ -81,7 +84,8 @@ def move_mouse(window, x, y):
         x (int): The x-coordinate for the mouse to move to, relative to the window.
         y (int): The y-coordinate for the mouse to move to, relative to the window.
     """
-    fromPoint = pyautogui.position()
+
+    fromPoint = position()
     toPoint = (window[0] + x, window[1] + y)
     hc = HumanClicker()
     options = {
@@ -93,6 +97,5 @@ def move_mouse(window, x, y):
 
     try:
         hc.move((x, y), duration=duration, humanCurve=human_curve)
-    except pyautogui.FailSafeException:
-        pyautogui.alert(text="Do you want to resume ?", title="Paused", button="Yes")
+    except Exception:
         hc.move((x, y), duration=duration, humanCurve=human_curve)

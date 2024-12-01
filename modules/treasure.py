@@ -2,6 +2,8 @@ import logging
 import os
 from datetime import datetime
 
+from modules.game import waitForItOrPass
+
 """
 This module provides functions related to choosing treasures after a battle/fight.
 
@@ -91,4 +93,8 @@ def chooseTreasure():
         or find_element(Button.keep.filename, Action.move_and_click)
         or find_element(Button.replace.filename, Action.move_and_click)
     ):
+        waitForItOrPass(Button.take, 1, 0.5)
+        waitForItOrPass(Button.keep, 1, 0.5)
+        waitForItOrPass(Button.replace, 1, 0.5)
         time.sleep(1)
+

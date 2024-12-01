@@ -30,6 +30,7 @@ log = logging.getLogger(__name__)
 def where():
     """Try to enter in Mercenaries mode,
     detect where the bot have to resume and go for it"""
+    start_time = time.time()
 
     # Check Hearthstone resolution and compare it to settings resolution
     _, _, width, height = windowMP()
@@ -88,4 +89,8 @@ def where():
     else:
         defaultCase()
 
-    return True
+    duration = time.time() - start_time
+    if duration < 20:
+        return False
+    else:
+        return True

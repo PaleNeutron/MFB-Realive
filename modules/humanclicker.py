@@ -1,5 +1,9 @@
-import pyautogui
+import time
 
+import pyautogui
+import pydirectinput
+
+from modules.base_mouse_func import click, moveTo, position
 from modules.humancurve import HumanCurve
 
 
@@ -11,6 +15,7 @@ def setup_pyautogui():
     # The number of seconds to pause after EVERY public function call.
     pyautogui.PAUSE = 0.015  # Default: 0.1
 
+
 setup_pyautogui()
 
 class HumanClicker():
@@ -18,16 +23,18 @@ class HumanClicker():
         pass
 
     def move(self, toPoint, duration=2, humanCurve=None):
-        fromPoint = pyautogui.position()
+        fromPoint = position()
         if not humanCurve:
             humanCurve = HumanCurve(fromPoint, toPoint)
 
         pyautogui.PAUSE = duration / len(humanCurve.points)
+        pydirectinput.PAUSE = pyautogui.PAUSE
         for point in humanCurve.points:
-            pyautogui.moveTo(point)
+            moveTo(point[0], point[1])
+            # time.sleep(duration / len(humanCurve.points))
 
     def click(self):
-        pyautogui.click()
+        click()
 
 
 
