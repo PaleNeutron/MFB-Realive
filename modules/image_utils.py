@@ -14,6 +14,7 @@ Functions:
 
 import logging
 import os.path
+import random
 import sys
 
 import cv2
@@ -179,6 +180,7 @@ def find_element_from_file(
     file,
     new_screenshot=True,
     threshold="-",
+    random_point=True,
 ):
     """
     Finds an element in the screen from a template file.
@@ -187,9 +189,12 @@ def find_element_from_file(
         file (str): The file path of the template.
         new_screenshot (bool): Whether to take a new screenshot for matching. Defaults to True.
         threshold (str): The threshold for template matching. Defaults to '-'.
+        random_point (bool): Whether to return a random point near the center of the element. Defaults to True.
 
     Returns:
         tuple or None: The coordinates of the center of the element found or None if not found.
+        the coordinates are relative to the top left corner of the window.
+        and will be a small range of random point near the center of the element if random_point is True.
     """
 
     if threshold == "-":
@@ -239,6 +244,13 @@ def find_element_from_file(
         log.info(
             "Found %s ( %s ) %s %s", file, threshold, click_coords[0], click_coords[1]
         )
+        if random_point:
+            min_axis = min(template.shape[0], template.shape[1]) // 2
+            range = min_axis // 4
+            click_coords = (
+                click_coords[0] + random.randint(-range, range),
+                click_coords[1] + random.randint(-range, range),
+            )
 
     else:
         log.info("Waiting for... %s\033[K" % file)
