@@ -14,6 +14,7 @@ from win32 import win32process
 
 from modules.constants import Action, Button
 from modules.image_utils import find_element
+from modules.utils import rsleep
 
 log = logging.getLogger(__name__)
 
@@ -80,17 +81,17 @@ def enter_from_battlenet():
     """
     found_element = find_element(Button.battlenet.filename, Action.move_and_click)
     if found_element:
-        time.sleep(1)
+        rsleep(1)
 
     found_element = find_element(
         Button.battlenet_hearthstone.filename, Action.move_and_click
     )
     if found_element:
-        time.sleep(1)
+        rsleep(1)
 
     if find_element(Button.battlenet_play.filename, Action.move_and_click):
         log.info("Waiting (20s) for game to start")
-        time.sleep(20)
+        rsleep(20)
 
     else:
         log.info("Battle.net wasn't found, attempting to snap to process.")
@@ -98,6 +99,6 @@ def enter_from_battlenet():
             bring_to_focus_windows( )
         elif platform.system( ) == 'Linux':
             bring_to_focus_linux( )
-        time.sleep(3)
+        rsleep(3)
 
     return True

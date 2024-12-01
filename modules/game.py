@@ -13,6 +13,7 @@ from modules.mouse_utils import mouse_position, move_mouse, move_mouse_and_click
 from modules.platforms import windowMP
 from modules.reconnects import click_reconnect, game_closed
 from modules.settings import jposition
+from modules.utils import rsleep
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ def countdown(t, step=1, msg="Sleeping"):
     pad_str = " " * len(f"{step}")
     for i in range(t, 0, -step):
         sys.stdout.write(f"{msg} for the next {i} seconds {pad_str}\r")
-        time.sleep(step)
+        rsleep(step)
 
 
 def waitForItOrPass(image, duration, step=0.5):
@@ -37,8 +38,8 @@ def waitForItOrPass(image, duration, step=0.5):
 
     log.info("Waiting (%ss max) for : %s", str(duration), image)
     for _ in range(int(duration / step)):
-        time.sleep(step)
-        # time.sleep(0.5)
+        rsleep(step)
+        # rsleep(0.5)
         if find_element(image.filename, Action.screenshot):
             retour = True
             break
@@ -63,9 +64,9 @@ def defaultCase():
     if find_element(UIElement.reconnect_button.filename, Action.move_and_click):
         log.info("Game disconnected...attempting reconnect.")
         click_reconnect()
-        time.sleep(10)
+        rsleep(10)
         click_reconnect()
-        time.sleep(10)
+        rsleep(10)
         click_reconnect()
     if find_element(UIElement.game_closed.filename, Action.move_and_click):
         game_closed()

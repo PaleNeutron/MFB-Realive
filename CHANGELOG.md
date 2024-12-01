@@ -153,7 +153,7 @@
 15. Changed `modules\encounter.py` `log.error` string to use lazy `%` formatting.
 16. Changed `modules\game.py` `log.info` string to use lazy `%` formatting.
 17. Changed `modules\gameloop.py` `log.error` string to use lazy `%` formatting.
-18. Removed `modules\gameloop.py` commented `time.sleep` commands and a disabled function.
+18. Removed `modules\gameloop.py` commented `rsleep` commands and a disabled function.
 19. Changed `modules\image_utils.py` `log.error` string to use lazy `%` formatting (line 60, 100, 102).
 20. Changed `modules\image_utils.py` `log.info` string to use lazy `%` formatting (line 201).
 21. Changed `modules\image_utils.py` `print` string to use lazy `%` formatting (line 204).

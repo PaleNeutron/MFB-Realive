@@ -10,6 +10,8 @@ from collections import namedtuple
 from datetime import datetime
 from typing import List
 
+from modules.utils import rsleep
+
 from .constants import Action, Button, UIElement
 from .game import countdown, waitForItOrPass
 from .image_utils import find_element, save_screenshot
@@ -88,7 +90,7 @@ def select_enemy_to_attack(index):
     retour = False
 
     if index:
-        time.sleep(0.3)
+        rsleep(0.3)
         log.debug(
             "Move index (index, x, y) : %s %s %s",
             index,
@@ -449,11 +451,11 @@ def select_ability(localhero, myBoard, enemies: Enemies, round):
 
     if localhero in mercsAbilities:
         retour = False
-        time.sleep(0.3)
+        rsleep(0.3)
         chooseone2 = [windowMP()[2] // 2.4, windowMP()[2] // 1.7]
-        time.sleep(0.3)
+        rsleep(0.3)
         chooseone3 = [windowMP()[2] // 3, windowMP()[2] // 2, windowMP()[2] // 1.5]
-        time.sleep(0.3)
+        rsleep(0.3)
 
         abilitySetting = didnt_find_a_name_for_this_one(
             localhero, ability_section, round, 1
@@ -466,14 +468,14 @@ def select_ability(localhero, myBoard, enemies: Enemies, round):
                 num = len(attact_data)
                 attact_data = attact_data[abilitySetting.get("chooseone", 0)]
                 if num == 3:
-                    time.sleep(0.3)
+                    rsleep(0.3)
                     move_mouse_and_click(
                         windowMP(),
                         chooseone3[abilitySetting["chooseone"]],
                         windowMP()[3] // 2,
                     )
                 elif num == 2:
-                    time.sleep(0.3)
+                    rsleep(0.3)
                     move_mouse_and_click(
                         windowMP(),
                         chooseone2[abilitySetting["chooseone"]],
@@ -482,7 +484,7 @@ def select_ability(localhero, myBoard, enemies: Enemies, round):
             if isinstance(attact_data, bool):
                 retour = attact_data
             elif attact_data.startswith("friend"):
-                time.sleep(0.3)
+                rsleep(0.3)
 
                 # if attacks.json shows something more than just "friend" (like "Beast")
                 if ":" in attact_data:
@@ -559,22 +561,22 @@ def take_turn_action(
     log.info("attack with : %s ( position : %s/%s)", mercName, position, number)
     x, y = calc_position(number, position)
     move_mouse_and_click(windowMP(), x, y)
-    time.sleep(0.1)
+    rsleep(0.1)
     # move_mouse(windowMP(), windowMP()[2] / 3, windowMP()[3] / 2)
-    # time.sleep(0.3)
+    # rsleep(0.3)
     need_target = select_ability(mercName, myMercs, enemies, round)
     # if abliity is False:
     #     # Go (mouse) to "central zone" and click on an empty space
     #     move_mouse_and_click(
     #         windowMP(), windowMP()[2] // 2, windowMP()[3] // 1.2
     #     )
-    #     time.sleep(0.3)
+    #     rsleep(0.3)
     #     # click next mercenary
     #     next_position = position + 1
     #     if next_position <= number:
     #         x, y = calc_position(number, next_position)
     #         move_mouse_and_click(windowMP(), x, y)
-    #         time.sleep(0.3)
+    #         rsleep(0.3)
     #     return
 
     if mercName in mercslist:
@@ -628,9 +630,9 @@ def execute_action_sequence(window, x, y):
         y: The y-coordinate of the target location.
     """
     move_mouse_and_click(window, x, y)
-    time.sleep(0.3)
+    rsleep(0.3)
     move_mouse(window, window[2] / 3, window[3] / 2)
-    time.sleep(0.3)
+    rsleep(0.3)
 
 
 def find_enemies(ns=True) -> Enemies:
@@ -718,7 +720,7 @@ def battle(zoneLog=None):
             log.warning("Battle exceed %s rounds", MAX_IDLE)
             retour = "loose"
             break
-        time.sleep(0.3)
+        rsleep(0.3)
         move_mouse(
             windowMP(),
             windowMP()[2] // 4,
@@ -774,7 +776,7 @@ def battle(zoneLog=None):
             # when you're looking for red/green/blue enemies
             # move_mouse_and_click(windowMP(), windowMP()[2] // 2, windowMP()[3] // 1.2)
 
-            time.sleep(0.5)
+            rsleep(0.5)
 
             # try to target the enemy are (smaller is better to avoid to detect
             # an enemy outside the zone)
@@ -793,7 +795,7 @@ def battle(zoneLog=None):
 
             # Go (mouse) to "central zone" and click on an empty space
             # move_mouse_and_click(windowMP(), windowMP()[2] // 2, windowMP()[3] // 1.2)
-            # time.sleep(1)
+            # rsleep(1)
 
             for i in mercenaries:
 
@@ -813,7 +815,7 @@ def battle(zoneLog=None):
                 #   ability), the mercenary is clicked on to be targeted (from
                 #   previous ability). Need a "rightclick" to cancel this action.
                 mouse_click("right")
-                time.sleep(0.5)
+                rsleep(0.5)
 
             i = 0
             while not find_element(Button.allready.filename, Action.move_and_click):
@@ -822,9 +824,9 @@ def battle(zoneLog=None):
                     mouse_click("right")
                     find_element(Button.fight.filename, Action.move_and_click)
                     break
-                time.sleep(0.2)
+                rsleep(0.2)
                 i += 1
-            time.sleep(3)
+            rsleep(3)
             round += 1
         else:
             idle += 1
@@ -853,7 +855,7 @@ def selectCardsInHand(zL=None):
     global ability_section
 
     # while not find_element(Button.num.filename, Action.screenshot):
-    #    time.sleep(2)
+    #    rsleep(2)
     waitForItOrPass(Button.num, 60, 2)
 
     if find_element(Button.num.filename, Action.screenshot):
@@ -863,7 +865,7 @@ def selectCardsInHand(zL=None):
         zL.start()
         while not zL.eof:
             # print("Reaching Zone.log end before starting")
-            time.sleep(1)
+            rsleep(1)
 
         # check if HS is ready for the battle
         # and check logs to find
@@ -973,7 +975,7 @@ class cardsInHand:
             self.in_hand.remove(mercenary)
 
             while not self.zone_log.get_zonechanged():
-                time.sleep(0.5)
+                rsleep(0.5)
                 i += 1
                 if i > 10:
                     log.error("Putting %s on board failed.", mercenary)

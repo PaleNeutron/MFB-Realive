@@ -23,6 +23,7 @@ from modules.reconnects import (
 from modules.resolution import check_resolution
 from modules.settings import jposition
 from modules.travelpoint import travelpointSelection
+from modules.utils import rsleep
 
 log = logging.getLogger(__name__)
 
@@ -65,11 +66,11 @@ def where():
 
     if find_element(UIElement.bounties.filename, Action.screenshot):
         travelToLevel()
-        time.sleep(1)
+        rsleep(1)
 
     if find_element(UIElement.team_selection.filename, Action.screenshot):
         selectGroup()
-        time.sleep(1)
+        rsleep(1)
 
     if find_element(UIElement.view_party.filename, Action.screenshot):
         goToEncounter()

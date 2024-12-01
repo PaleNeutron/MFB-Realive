@@ -24,6 +24,7 @@ from modules.notification import send_notification, send_slack_notification
 from modules.platforms import windowMP
 from modules.settings import jthreshold, settings_dict
 from modules.treasure import chooseTreasure
+from modules.utils import rsleep
 
 log = logging.getLogger(__name__)
 
@@ -63,7 +64,7 @@ def collect():
         # move the mouse to avoid a bug where it is over a card/hero (at the end)
         # hiding the "OK" button
         move_mouse(windowMP(), windowMP()[2] // 1.25, windowMP()[3] // 1.25)
-        time.sleep(5)
+        rsleep(5)
 
         if find_element(Button.finishok.filename, Action.move_and_click):
             break
@@ -95,11 +96,11 @@ def quitBounty():
     end = False
     if find_element(Button.view_party.filename, Action.move_and_click):
         while not find_element(UIElement.your_party.filename, Action.move):
-            time.sleep(0.5)
+            rsleep(0.5)
         while not find_element(Button.retire.filename, Action.move_and_click):
-            time.sleep(0.5)
+            rsleep(0.5)
         while not find_element(Button.lockin.filename, Action.move_and_click):
-            time.sleep(0.5)
+            rsleep(0.5)
         end = True
         log.info("Quitting the bounty level before boss battle.")
     return end
@@ -109,7 +110,7 @@ def nextlvl():
     """
     Progress on the map (Boon, Portal, ...) to find the next battle
     """
-    time.sleep(3)
+    rsleep(3)
     retour = True
 
     if not find_element(Button.play.filename, Action.screenshot):
@@ -124,30 +125,30 @@ def nextlvl():
             look_at_campfire_completed_tasks()
 
         elif find_element(Button.reveal.filename, Action.move_and_click):
-            time.sleep(1)
+            rsleep(1)
             move_mouse_and_click(windowMP(), windowMP()[2] / 2, windowMP()[3] // 1.25)
-            time.sleep(1.5)
+            rsleep(1.5)
 
         elif find_element(Button.visit.filename, Action.move_and_click):
-            time.sleep(7)
+            rsleep(7)
 
         elif find_element(Button.pick.filename, Action.move_and_click) or find_element(
             Button.portal_warp.filename, Action.move_and_click
         ):
-            time.sleep(1)
+            rsleep(1)
             mouse_click()
-            time.sleep(5)
+            rsleep(5)
         elif find_element(UIElement.mystery.filename, Action.screenshot):
-            time.sleep(1)
+            rsleep(1)
             find_element(UIElement.mystery.filename, Action.move_and_click)
 
         elif find_element(UIElement.spirithealer.filename, Action.screenshot):
-            time.sleep(1)
+            rsleep(1)
             find_element(UIElement.spirithealer.filename, Action.move_and_click)
 
         elif find_element(UIElement.campfire.filename, Action.screenshot):
             look_at_campfire_completed_tasks()
-            time.sleep(3)
+            rsleep(3)
 
         # we add this test because, maybe we are not on "Encounter Map" anymore
         # (like after the final boss)
@@ -183,7 +184,7 @@ def nextlvl():
                 x, y = search_battle_list.pop(0)
                 mouse_click("right")
                 move_mouse_and_click(windowMP(), x, y)
-                time.sleep(2)
+                rsleep(2)
             else:
                 searchForEncounter()
 
@@ -233,7 +234,7 @@ def check_boss_battle():
     if settings_dict["quitbeforebossfight"] is True and find_element(
         UIElement.boss.filename, Action.screenshot
     ):
-        time.sleep(1)
+        rsleep(1)
         return quitBounty()
 
     return False
@@ -250,14 +251,14 @@ def handle_win():
     while True:
         if not find_element(UIElement.take_grey.filename, Action.screenshot):
             mouse_click()
-            time.sleep(0.5)
+            rsleep(0.5)
         else:
             chooseTreasure()
             break
 
         if not find_element(UIElement.replace_grey.filename, Action.screenshot):
             mouse_click()
-            time.sleep(0.5)
+            rsleep(0.5)
         else:
             chooseTreasure()
             break
@@ -304,7 +305,7 @@ def goToEncounter():
     continue on the road and collect everything (treasure, rewards, ...)
     """
     log.info("goToEncounter : entering")
-    time.sleep(2)
+    rsleep(2)
     travelEnd = False
 
     fight_count = 0
@@ -314,7 +315,7 @@ def goToEncounter():
         # TODO: infinite loop if the game is stuck
         if find_element(Button.play.filename, Action.screenshot):
             if settings_dict["max_fights"] != 0 and fight_count >= settings_dict["max_fights"]:
-                time.sleep(1)
+                rsleep(1)
                 quitBounty()
                 break                
             travelEnd = check_boss_battle()
@@ -322,11 +323,11 @@ def goToEncounter():
                 break
 
             while find_element(Button.play.filename, Action.move_and_click):
-                time.sleep(1)
+                rsleep(1)
 
             retour = selectCardsInHand()
             log.info("goToEncounter - retour = %s", retour)
-            time.sleep(1)
+            rsleep(1)
 
             if retour == "win":
                 travelEnd = handle_win()
@@ -348,11 +349,11 @@ def goToEncounter():
         if not find_element(UIElement.bounties.filename, Action.screenshot):
             look_at_campfire_completed_tasks()
             move_mouse_and_click(windowMP(), windowMP()[2] / 2, windowMP()[3] / 1.25)
-            time.sleep(2)
+            rsleep(2)
 
     if not find_element(UIElement.bounties.filename, Action.screenshot):
         defaultCase()
-        time.sleep(2)
+        rsleep(2)
 
 
 def travelToLevel(page="next"):
@@ -373,22 +374,22 @@ def travelToLevel(page="next"):
         send_slack_notification(
             json.dumps({"text": "Starting %s bounty." % settings_dict["location"]})
         )
-        time.sleep(0.3)
+        rsleep(0.3)
         retour = True
     elif page == "next":
         if find_element(Button.arrow_next.filename, Action.move_and_click):
-            time.sleep(1)
+            rsleep(1)
             retour = travelToLevel("next")
         if retour is False and find_element(
             Button.arrow_prev.filename, Action.move_and_click
         ):
-            time.sleep(1)
+            rsleep(1)
             retour = travelToLevel("previous")
         elif retour is False:
             find_element(Button.back.filename, Action.move_and_click)
     elif page == "previous":
         if find_element(Button.arrow_prev.filename, Action.move_and_click):
-            time.sleep(1)
+            rsleep(1)
             retour = travelToLevel("previous")
         else:
             find_element(Button.back.filename, Action.move_and_click)
@@ -424,7 +425,7 @@ def selectGroup():
 
     if find_element(UIElement.choose_party.filename, Action.get_coords):
         move_mouse_and_click(windowMP(), group_x, group_y)
-        time.sleep(0.2)
+        rsleep(0.2)
         mouse_click()
         find_element(Button.choose_team.filename, Action.move_and_click)
         move_mouse(windowMP(), windowMP()[2] / 1.5, windowMP()[3] / 2)

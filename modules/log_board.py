@@ -12,6 +12,8 @@ import threading
 import time
 from pathlib import Path
 
+from modules.utils import rsleep
+
 log = logging.getLogger(__name__)
 
 
@@ -43,7 +45,7 @@ class LogHSMercs:
         if not Path(logpath).exists():
             log.info("Logfile 'Zone.log' doesn't exist. Waiting for it...")
         while not Path(logpath).exists():
-            time.sleep(1)
+            rsleep(1)
 
         self._initialize_logfile()
         self._initialize_game_state()
@@ -103,7 +105,7 @@ class LogHSMercs:
             # Sleep if the file hasn't been updated
             if not line:
                 self.eof = True
-                time.sleep(0.1)
+                rsleep(0.1)
                 continue
 
             if "ZoneChangeList.ProcessChanges() - processing" in line:

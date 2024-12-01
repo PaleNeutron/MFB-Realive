@@ -13,11 +13,12 @@ Functions:
 import logging
 import time
 
-from modules.constants import UIElement, Button, Action
+from modules.constants import Action, Button, UIElement
 from modules.game import waitForItOrPass
 from modules.image_utils import find_element
-from modules.mouse_utils import move_mouse_and_click, move_mouse, mouse_click
+from modules.mouse_utils import mouse_click, move_mouse, move_mouse_and_click
 from modules.platforms import windowMP
+from modules.utils import rsleep
 
 log = logging.getLogger(__name__)
 
@@ -34,11 +35,11 @@ def toggle_campfire_screen():
     Returns the view that is currently active ('party', 'visitor'), or None if neither view is active.
     """
     if find_element(Button.campfire_hiddenparty.filename, Action.move_and_click):
-        time.sleep(2)
+        rsleep(2)
         return "party"
 
     if find_element(Button.campfire_hiddenvisitors.filename, Action.move_and_click):
-        time.sleep(2)
+        rsleep(2)
         return "visitor"
 
     return None
@@ -56,7 +57,7 @@ def check_party_tasks():
             Button.campfire_completed_partytask.filename, Action.move_and_click
         ):
             while not find_element(Button.campfire_claim.filename, Action.screenshot):
-                time.sleep(0.5)
+                rsleep(0.5)
             return True
     return False
 
@@ -88,19 +89,19 @@ def claim_task_reward():
     Claim the rewards for a completed task in the campfire.
     """
     while not find_element(Button.campfire_claim.filename, Action.screenshot):
-        time.sleep(0.5)
+        rsleep(0.5)
 
     # Loop added because sometimes the bot finds the button but
     # Hearthstone is not ready, so the bot clicks too soon.
     # Need to make a loop to try several time to click
     while find_element(Button.campfire_claim.filename, Action.move_and_click):
-        time.sleep(0.5)
+        rsleep(0.5)
         move_mouse(windowMP(), windowMP()[2] / 2, windowMP()[3] / 1.125)
 
-    time.sleep(2)
+    rsleep(2)
     while not find_element(UIElement.campfire.filename, Action.screenshot):
         mouse_click()
-        time.sleep(2)
+        rsleep(2)
 
 
 def look_at_campfire_completed_tasks():

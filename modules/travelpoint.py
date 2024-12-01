@@ -15,10 +15,10 @@ import time
 from modules.constants import Action, Button, UIElement
 from modules.game import waitForItOrPass
 from modules.image_utils import find_element
-from modules.mouse_utils import move_mouse, mouse_scroll
+from modules.mouse_utils import mouse_scroll, move_mouse
 from modules.platforms import windowMP
 from modules.settings import jposition, jthreshold, settings_dict
-
+from modules.utils import rsleep
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ def travelpointSelection():
         move_mouse(windowMP(), windowMP()[2] // 1.5, windowMP()[3] // 2)
 
         mouse_scroll(jposition["travelpoint.scroll.top"])
-        time.sleep(0.5)
+        rsleep(0.5)
 
         location = settings_dict["location"]
         tag = f"travelpoint.{location}.scroll"
@@ -62,7 +62,7 @@ def travelpointSelection():
             try:
                 mouse_scroll(jposition[tag])
                 move_mouse(windowMP(), windowMP()[2] // 3, windowMP()[3] // 2)
-                time.sleep(0.5)
+                rsleep(0.5)
                 find_element(
                     getattr(UIElement, location).filename,
                     Action.move_and_click,
@@ -76,7 +76,7 @@ def travelpointSelection():
                 log.error("Unexpected error occurred: %s", e)
 
         move_mouse(windowMP(), windowMP()[2] // 2, windowMP()[3] // 2)
-        time.sleep(0.5)
+        rsleep(0.5)
 
         if settings_dict["mode"] == "Normal":
             find_element(UIElement.normal.filename, Action.move_and_click)

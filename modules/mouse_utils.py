@@ -19,6 +19,7 @@ import time
 from modules.base_mouse_func import click, moveTo, position, scroll
 from modules.humanclicker import HumanClicker
 from modules.humancurve import HumanCurve
+from modules.utils import rsleep
 
 MOUSE_RANGE = 2
 
@@ -73,7 +74,7 @@ def move_mouse_and_click(window, x, y):
         y (int): The y-coordinate for the mouse to move to, relative to the window.
     """
     move_mouse(window, x, y)
-    time.sleep(0.1)
+    rsleep(0.05)
     click()
 
 

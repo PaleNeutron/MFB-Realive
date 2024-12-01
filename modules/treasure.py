@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 from modules.game import waitForItOrPass
+from modules.utils import rsleep
 
 """
 This module provides functions related to choosing treasures after a battle/fight.
@@ -70,7 +71,7 @@ def chooseTreasure():
         treasure = str(f"{TREASURES_DIR}/{next_treasure}.png")
 
         if find_element(treasure, Action.move_and_click, threshold=0.88):
-            time.sleep(1)
+            rsleep(1)
             break
     else:
         found = False
@@ -78,7 +79,7 @@ def chooseTreasure():
             log.info("No known treasure found: looking for passive one")
             if find_element(UIElement.treasure_passive.filename, Action.move_and_click):
                 found = True
-                time.sleep(1)
+                rsleep(1)
 
         if found is False:
             log.info("No known treasure found: picking random one")
@@ -86,7 +87,7 @@ def chooseTreasure():
             y = windowMP()[3] // 2
             x = windowMP()[2] // temp
             move_mouse_and_click(windowMP(), x, y)
-            time.sleep(1)
+            rsleep(1)
 
     while not (
         find_element(Button.take.filename, Action.move_and_click)
@@ -96,5 +97,5 @@ def chooseTreasure():
         waitForItOrPass(Button.take, 1, 0.5)
         waitForItOrPass(Button.keep, 1, 0.5)
         waitForItOrPass(Button.replace, 1, 0.5)
-        time.sleep(1)
+        rsleep(1)
 

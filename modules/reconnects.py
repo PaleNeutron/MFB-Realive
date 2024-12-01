@@ -1,10 +1,13 @@
 import subprocess
 import time
+
 import psutil
 
 from modules.battlenetloop import enter_from_battlenet
 from modules.mouse_utils import move_mouse_and_click
 from modules.platforms import windowMP
+from modules.utils import rsleep
+
 
 def choose_mode():
     """
@@ -17,7 +20,7 @@ def choose_mode():
     choose_coord_y = 750 / 1080
 
     move_mouse_and_click(windowMP( ), windowMP( )[2] * mode_coord_x, windowMP( )[3] * mode_coord_y)
-    time.sleep(1)
+    rsleep(1)
     move_mouse_and_click(windowMP( ), windowMP( )[2] * choose_coord_x, windowMP( )[3] * choose_coord_y)
 
 
@@ -33,7 +36,7 @@ def click_wipe_button():
     wipe_coord_y = 647 / 1080
 
     move_mouse_and_click(windowMP( ), windowMP( )[2] * wipe_coord_x, windowMP( )[3] * wipe_coord_y)
-    time.sleep(0.3)
+    rsleep(0.3)
 
 
 def click_reconnect():
@@ -48,7 +51,7 @@ def click_reconnect():
     rcbutton_coord_y = 840 / 1080
 
     move_mouse_and_click(windowMP( ), windowMP( )[2] * rcbutton_coord_x, windowMP( )[3] * rcbutton_coord_y)
-    time.sleep(0.3)
+    rsleep(0.3)
 
 
 def game_closed():
@@ -72,7 +75,7 @@ def game_closed():
             pid = proc.info["pid"]
             try:
                 proc.kill()
-                time.sleep(1)  # give the process some time to terminate
+                rsleep(1)  # give the process some time to terminate
                 if not psutil.pid_exists(pid):
                     print(f'Process {process_name} with PID {pid} was successfully killed with psutil.')
                     return
@@ -89,7 +92,7 @@ def game_closed():
             for command, method in commands:
                 try:
                     subprocess.run(command)
-                    time.sleep(1)  # give the process some time to terminate
+                    rsleep(1)  # give the process some time to terminate
                     if not psutil.pid_exists(pid):
                         print(f'Process {process_name} was successfully killed with {method}.')
                         return
@@ -98,5 +101,5 @@ def game_closed():
 
             print(f'Failed to kill process {process_name} with PID {pid}.')
 
-    time.sleep(2)
+    rsleep(2)
     enter_from_battlenet()

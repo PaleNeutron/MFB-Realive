@@ -31,7 +31,7 @@ class HumanClicker():
         pydirectinput.PAUSE = pyautogui.PAUSE
         for point in humanCurve.points:
             moveTo(point[0], point[1])
-            # time.sleep(duration / len(humanCurve.points))
+            # rsleep(duration / len(humanCurve.points))
 
     def click(self):
         click()

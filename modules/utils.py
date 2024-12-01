@@ -2,6 +2,8 @@
 This module provides a function for updating dictionaries with new values.
 """
 
+import random
+import time
 from copy import deepcopy
 
 
@@ -25,3 +27,12 @@ def update(base_dictionary, updated_dictionary):
             copied_dictionary[updated_k] = updated_dictionary[updated_k]
 
     return copied_dictionary
+
+
+def rsleep(seconds):
+    """Sleep for a specified number of seconds randomly chosen between 0.9 and 1.1 times the input value.
+
+    Args:
+        seconds (int): number of seconds to sleep
+    """
+    time.sleep(seconds * random.uniform(0.9, 1.1))
