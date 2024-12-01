@@ -13,8 +13,6 @@
 # Mercenaries Farm Bot Realive
 MFB-Realive : https:\\github.com\Blixxky\MFB-Realive
 
-![Image](rejoice.jpg)
-
 
 ## Supported Resolutions
 
