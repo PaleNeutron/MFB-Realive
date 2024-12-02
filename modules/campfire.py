@@ -14,7 +14,7 @@ import logging
 import time
 
 from modules.constants import Action, Button, UIElement
-from modules.game import waitForItOrPass
+from modules.game import wait_until_timeout
 from modules.image_utils import find_element
 from modules.mouse_utils import mouse_click, move_mouse, move_mouse_and_click
 from modules.platforms import windowMP
@@ -52,7 +52,7 @@ def check_party_tasks():
     If no tasks are completed, return False.
     """
     if find_element(Button.campfire_hiddenvisitors.filename, Action.screenshot):
-        waitForItOrPass(Button.campfire_completed_partytask, 3)
+        wait_until_timeout(Button.campfire_completed_partytask, 3)
         if find_element(
             Button.campfire_completed_partytask.filename, Action.move_and_click
         ):
@@ -69,7 +69,7 @@ def check_visitor_tasks():
     If no tasks are completed, return False.
     """
     if find_element(Button.campfire_hiddenparty.filename, Action.screenshot):
-        waitForItOrPass(Button.campfire_completed_task, 3)
+        wait_until_timeout(Button.campfire_completed_task, 3)
         if (
             find_element(Button.campfire_completed_task.filename, Action.move_and_click)
             or find_element(

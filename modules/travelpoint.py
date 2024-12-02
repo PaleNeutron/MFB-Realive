@@ -13,7 +13,7 @@ import re
 import time
 
 from modules.constants import Action, Button, UIElement
-from modules.game import waitForItOrPass
+from modules.game import wait_until_timeout
 from modules.image_utils import find_element
 from modules.mouse_utils import mouse_scroll, move_mouse
 from modules.platforms import windowMP
@@ -46,7 +46,7 @@ def travelpointSelection():
     if find_element(UIElement.travelpoint.filename, Action.screenshot):
         move_mouse(windowMP(), windowMP()[2] // 1.5, windowMP()[3] // 2)
 
-        mouse_scroll(jposition["travelpoint.scroll.top"])
+        mouse_scroll(jposition["travelpoint.scroll.top"] * settings_dict["scroll_factor"])
         rsleep(0.5)
 
         location = settings_dict["location"]
@@ -85,5 +85,5 @@ def travelpointSelection():
         else:
             log.error("Settings (for Heroic/Normal) unrecognized.")
 
-    waitForItOrPass(Button.choose_travel, 2)
+    wait_until_timeout(Button.choose_travel, 2)
     find_element(Button.choose_travel.filename, Action.move_and_click)

@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import datetime
 
-from modules.game import waitForItOrPass
+from modules.game import wait_until_timeout
 from modules.utils import rsleep
 
 """
@@ -94,8 +94,8 @@ def chooseTreasure():
         or find_element(Button.keep.filename, Action.move_and_click)
         or find_element(Button.replace.filename, Action.move_and_click)
     ):
-        waitForItOrPass(Button.take, 1, 0.5)
-        waitForItOrPass(Button.keep, 1, 0.5)
-        waitForItOrPass(Button.replace, 1, 0.5)
+        wait_until_timeout(Button.take, 1, 0.5)
+        wait_until_timeout(Button.keep, 1, 0.5)
+        wait_until_timeout(Button.replace, 1, 0.5)
         rsleep(1)
 

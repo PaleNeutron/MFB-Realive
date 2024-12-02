@@ -6,11 +6,10 @@ Functions:
 
 """
 from modules.platforms.platforms import find_os
-from modules.platforms.window_managers.windows import get_window_mgr_on_windows
-from modules.platforms.window_managers.linux import WindowMgrLinux
+from modules.platforms.window_managers.base import WindowMgr
 
 
-def get_window_manager():
+def get_window_manager()->WindowMgr:
     """
     Get the appropriate window manager based on the operating system.
 
@@ -20,11 +19,16 @@ def get_window_manager():
     os = find_os()
 
     if os == "windows":
+        from modules.platforms.window_managers.windows import get_window_mgr_on_windows
         WindowMgrWindows = get_window_mgr_on_windows()
         return WindowMgrWindows()
-
-    if os == "linux":
+    elif os == "linux":
+        from modules.platforms.window_managers.linux import WindowMgrLinux
         return WindowMgrLinux()
+    elif os == "macos":
+        from modules.platforms.window_managers.macos import WindowMgrMacOS
+        return WindowMgrMacOS()
+
 
     raise ValueError(f"OS not recognized: {os}")
 

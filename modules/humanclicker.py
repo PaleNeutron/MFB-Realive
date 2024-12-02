@@ -1,8 +1,8 @@
 import time
 
 import pyautogui
-import pydirectinput
 
+# import pydirectinput
 from modules.base_mouse_func import click, moveTo, position
 from modules.humancurve import HumanCurve
 
@@ -28,7 +28,7 @@ class HumanClicker():
             humanCurve = HumanCurve(fromPoint, toPoint)
 
         pyautogui.PAUSE = duration / len(humanCurve.points)
-        pydirectinput.PAUSE = pyautogui.PAUSE
+        # pydirectinput.PAUSE = pyautogui.PAUSE
         for point in humanCurve.points:
             moveTo(point[0], point[1])
             # rsleep(duration / len(humanCurve.points))

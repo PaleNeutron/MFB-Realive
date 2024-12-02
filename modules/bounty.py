@@ -11,7 +11,7 @@ import time
 from modules.campfire import look_at_campfire_completed_tasks
 from modules.constants import Action, Button, UIElement
 from modules.encounter import selectCardsInHand
-from modules.game import defaultCase, waitForItOrPass
+from modules.game import defaultCase, wait_until_timeout
 from modules.image_utils import find_element
 from modules.mouse_utils import (
     MOUSE_RANGE,
@@ -121,7 +121,7 @@ def nextlvl():
                 UIElement.task_expansion_completed.filename, Action.screenshot
             )
         ):
-            waitForItOrPass(UIElement.campfire, 10)
+            wait_until_timeout(UIElement.campfire, 10)
             look_at_campfire_completed_tasks()
 
         elif find_element(Button.reveal.filename, Action.move_and_click):
@@ -369,7 +369,7 @@ def travelToLevel(page="next"):
         Action.move_and_click,
         jthreshold["levels"],
     ):
-        waitForItOrPass(Button.choose_level, 6)
+        wait_until_timeout(Button.choose_level, 6)
         find_element(Button.choose_level.filename, Action.move_and_click)
         send_slack_notification(
             json.dumps({"text": "Starting %s bounty." % settings_dict["location"]})
@@ -429,8 +429,10 @@ def selectGroup():
         mouse_click()
         find_element(Button.choose_team.filename, Action.move_and_click)
         move_mouse(windowMP(), windowMP()[2] / 1.5, windowMP()[3] / 2)
-        waitForItOrPass(Button.lockin, 3)
-        find_element(Button.lockin.filename, Action.move_and_click)
-
+        wait_until_timeout(Button.lockin, 3)
+        for _ in range(3):
+            if not find_element(Button.lockin.filename, Action.move_and_click):
+                break
+            rsleep(0.2)
     log.debug("selectGroup : ended")
     return

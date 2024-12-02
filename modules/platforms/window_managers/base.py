@@ -17,5 +17,9 @@ class WindowMgr(ABC):
         """Get window geometry"""
 
     @abstractmethod
-    def find_game(self):
+    def find_game(self, *args, **kwargs):
         """Find Game"""
+
+    @abstractmethod
+    def activate_window(self):
+        """Activate Window"""

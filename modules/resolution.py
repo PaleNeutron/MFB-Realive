@@ -11,6 +11,7 @@ Note: This module requires the 'cv2' and 'os' libraries.
 
 import logging
 import os
+from pathlib import Path
 
 import cv2
 
@@ -32,6 +33,7 @@ def resize_image(srcfile, dstfile, params=[]):
         dstfile (str): Path to the destination image file.
         params (list, optional): List of parameters. Defaults to None.
     """
+    Path(dstfile).parent.mkdir(parents=True, exist_ok=True)
     orig_resolution_w = int(params[0].split("x")[0])
     new_resolution_w = int(params[1].split("x")[0])
 
@@ -101,3 +103,4 @@ def gen_images_new_resolution():
                 log.error(
                     "Resolution doesn't have the same ratio as %s", orig_resolution
                 )
+                raise ValueError("Resolution doesn't have the same ratio")

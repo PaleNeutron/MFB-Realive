@@ -8,12 +8,13 @@ Classes:
   window management functions using the Wnck library.
 
 """
-import time
 import logging
+import time
+
 import pyautogui
 
-from modules.platforms.window_managers.base import WindowMgr
 from modules.platforms.platforms import find_os
+from modules.platforms.window_managers.base import WindowMgr
 
 # from ...exceptions import WindowManagerError
 
@@ -25,7 +26,7 @@ try:
     import gi
 
     gi.require_version("Wnck", "3.0")
-    from gi.repository import Wnck, Gtk
+    from gi.repository import Gtk, Wnck
 except ImportError:
     if find_os() == "linux":
         log.error("gi.repository and/or pgi not installed")
@@ -42,7 +43,7 @@ class WindowMgrLinux(WindowMgr):
         self.win = None
         self._win = None  # define '_win' attribute in constructor
 
-    def find_game(self, WINDOW_NAME):
+    def find_game(self, WINDOW_NAME, *args, **kwargs):
         """
         Searches for the game window named 'WINDOW_NAME' on the screen and makes it active.
         If the game window is not found, prints a message and sets the target window as None.
@@ -87,3 +88,12 @@ class WindowMgrLinux(WindowMgr):
             (width, height) = pyautogui.size()
             return (0, 0, width, height)
         return self._win.get_client_window_geometry()
+
+    def activate_window(self):
+        """
+        Activates the target window.
+        """
+        self._win.activate(int(time.time()))
+        self._win.make_above()
+        self._win.unmake_above()
+        return self._win

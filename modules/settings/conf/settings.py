@@ -65,20 +65,23 @@ def get_system_user_settings(system_settings_filename, user_settings_filename):
         system_settings_dict = get_settings(system_settings_filename)
         user_settings_dict = get_settings(user_settings_filename)
         settings_dict = update(system_settings_dict, user_settings_dict)
-        if not settings_dict["gamedir"]:
-            raise UnsetGameDirectory("Game Dir setting is not set")
+        if not settings_dict["zonelog"]:
+            if not settings_dict["gamedir"]:
+                raise UnsetGameDirectory("Game Dir setting is not set")
 
-        game_dir = pathlib.Path(settings_dict["gamedir"])
-        if not game_dir.is_dir():
-            raise MissingGameDirectory(f"Game directory ({game_dir}) does not exist")
+            game_dir = pathlib.Path(settings_dict["gamedir"])
+            if not game_dir.is_dir():
+                raise MissingGameDirectory(f"Game directory ({game_dir}) does not exist")
 
-        logs_dir = f"{settings_dict['gamedir']}/Logs"
-        subdirectories = os.listdir(logs_dir)
+            logs_dir = f"{settings_dict['gamedir']}/Logs"
+            subdirectories = os.listdir(logs_dir)
 
-        settings_dict["zonelog"] = pathlib.PurePath(
-            game_dir,
-            f"Logs/{subdirectories[-1]}/Zone.log",
-        ).as_posix()
+            settings_dict["zonelog"] = pathlib.PurePath(
+                game_dir,
+                f"Logs/{subdirectories[-1]}/Zone.log",
+            ).as_posix()
+        else:
+            settings_dict["zonelog"] = pathlib.Path(settings_dict["zonelog"]).expanduser().resolve().as_posix()
     except (MissingGameDirectory, UnsetGameDirectory) as e:
         log.error("Running without settings: %s", e)
 

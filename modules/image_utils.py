@@ -59,8 +59,8 @@ def get_resolution() -> tuple[str, int, int, float]:
         setting_size = resolution.split("x")
         setting_w, setting_h = int(setting_size[0]), int(setting_size[1])
         windows_w, windows_h = windowMP()[2], windowMP()[3]
-        if round(windows_w / setting_w, 2) != round(windows_h / setting_h, 2):
-            log.warning(f"Setting resolution: {resolution} | Window resolution: {windows_w}x{windows_h}")
+        # if round(windows_w / setting_w, 2) != round(windows_h / setting_h, 2):
+        #     log.warning(f"Setting resolution: {resolution} | Window resolution: {windows_w}x{windows_h}")
         scale_size = setting_w / windows_w
         return resolution, setting_w, setting_h, scale_size
     except KeyError as e:
@@ -237,6 +237,7 @@ def find_element_from_file(
     
     template, mask = get_gray_image(file_path)
 
+    log.debug(f"Looking for {file} with threshold {threshold}")
     click_coords = find_element_center_on_screen(img, template, mask, threshold, scale_size)
 
     if click_coords is not None:
@@ -251,10 +252,11 @@ def find_element_from_file(
                 click_coords[0] + random.randint(-range, range),
                 click_coords[1] + random.randint(-range, range),
             )
+            log.debug("Random point: %s %s", click_coords[0], click_coords[1])
 
-    else:
-        log.info("Waiting for... %s\033[K" % file)
-        log.debug("Looked for %s ( %s )", file, threshold)
+    # else:
+    #     log.info("Waiting for... %s\033[K" % file)
+        # log.debug("Looked for %s ( %s )", file, threshold)
 
     return click_coords
 
@@ -331,7 +333,7 @@ def find_element_center_on_screen(img, template, mask, threshold=0, scale_size=1
     h = template.shape[0] // 2
     w = template.shape[1] // 2
     _, max_val, _, max_loc = cv2.minMaxLoc(result)
-
+    log.debug(f"max_val: {round(max_val, 2)}, threshold: {threshold}")
     return (
         ((max_loc[0] + w) / scale_size, (max_loc[1] + h) / scale_size)
         if max_val > threshold

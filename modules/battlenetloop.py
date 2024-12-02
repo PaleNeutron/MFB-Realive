@@ -10,10 +10,10 @@ import time
 
 import pyautogui
 import pygetwindow as gw
-from win32 import win32process
 
 from modules.constants import Action, Button
 from modules.image_utils import find_element
+from modules.platforms import win
 from modules.utils import rsleep
 
 log = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ def bring_to_focus_windows():
     If an error occurs during the process, it logs the error message.
     """
     try:
+        from win32 import win32process
         # Run a WMIC command to get the process id
         output = subprocess.check_output(
             "wmic process where (name='Battle.net.exe' or name='Battle.net') get ProcessId", shell=True).decode(
@@ -95,10 +96,7 @@ def enter_from_battlenet():
 
     else:
         log.info("Battle.net wasn't found, attempting to snap to process.")
-        if platform.system( ) == 'Windows':
-            bring_to_focus_windows( )
-        elif platform.system( ) == 'Linux':
-            bring_to_focus_linux( )
+        win.activate_window()
         rsleep(3)
 
     return True

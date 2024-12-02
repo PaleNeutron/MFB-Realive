@@ -12,6 +12,7 @@ Constants:
 - MOUSE_RANGE: The range of random mouse movement.
 """
 
+import logging
 import random
 import sys
 import time
@@ -24,7 +25,7 @@ from modules.utils import rsleep
 MOUSE_RANGE = 2
 
 
-
+log = logging.getLogger(__name__)
 
 def mouse_click(btn="left"):
     """
@@ -75,6 +76,7 @@ def move_mouse_and_click(window, x, y):
     """
     move_mouse(window, x, y)
     rsleep(0.05)
+    log.info("Clicking at %s, %s", x, y)
     click()
 
 

@@ -13,7 +13,7 @@ from typing import List
 from modules.utils import rsleep
 
 from .constants import Action, Button, UIElement
-from .game import countdown, waitForItOrPass
+from .game import countdown, wait_until_timeout
 from .image_utils import find_element, save_screenshot
 from .log_board import LogHSMercs
 from .mouse_utils import mouse_click, move_mouse, move_mouse_and_click
@@ -856,7 +856,7 @@ def selectCardsInHand(zL=None):
 
     # while not find_element(Button.num.filename, Action.screenshot):
     #    rsleep(2)
-    waitForItOrPass(Button.num, 60, 2)
+    wait_until_timeout(Button.num, 60, 2)
 
     if find_element(Button.num.filename, Action.screenshot):
         zL = LogHSMercs(settings_dict["zonelog"])

@@ -64,8 +64,7 @@ class WindowMgrWindowsWin32Gui(WindowMgr):
         if (self._handle is not None) and (
             WINDOW_NAME != win32gui.GetWindowText(win32gui.GetForegroundWindow())
         ):
-            self._show_window()
-            self._set_foreground()
+            self.activate_window()
         return self._handle
 
     def get_window_geometry(self):
@@ -135,4 +134,12 @@ class WindowMgrWindowsWin32Gui(WindowMgr):
         Sets the identified game window as the foreground window.
         """
         win32gui.SetForegroundWindow(self._handle)
+        shell.SendKeys("%")
+
+    def activate_window(self):
+        """
+        Activates the identified game window.
+        """
+        self._show_window()
+        self._set_foreground()
         shell.SendKeys("%")

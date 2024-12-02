@@ -26,7 +26,7 @@ def countdown(t, step=1, msg="Sleeping"):
         rsleep(step)
 
 
-def waitForItOrPass(image, duration, step=0.5):
+def wait_until_timeout(image, duration, step=0.5):
     """
     Wait to find 'image' on screen during 'duration' seconds (max)
     and continue if you don't find it.

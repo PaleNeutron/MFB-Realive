@@ -11,10 +11,17 @@ from modules.gameloop import where
 from modules.platforms import win
 from modules.reconnects import game_closed
 from modules.resolution import gen_images_new_resolution
+from modules.settings import settings_dict
 from modules.utils import rsleep
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+mod_logger = logging.getLogger("modules")
+mod_logger.setLevel(logging.DEBUG)
+h = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+h.setFormatter(formatter)
+mod_logger.addHandler(h)
 
 
 def main():
@@ -29,7 +36,7 @@ def main():
     while True:
         log.debug("Loop")
         try:
-            if win.find_game("Hearthstone"):
+            if win.find_game(settings_dict["window_name"]):
                 BNCount = 1
                 success = where()
                 if success:

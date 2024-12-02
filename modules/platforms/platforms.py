@@ -9,7 +9,6 @@ Functions:
 import logging
 import sys
 
-
 log = logging.getLogger(__name__)
 
 
@@ -26,6 +25,8 @@ def find_os():
         myOS = "windows"
     elif sys.platform in ["linux", "linux2"]:
         myOS = "linux"
+    elif sys.platform == "darwin":
+        myOS = "macos"
     else:
         myOS = "unknown"
         log.info("sys.platform='%s' is unknown.", sys.platform)
