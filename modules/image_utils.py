@@ -229,8 +229,11 @@ def find_element_from_file(
         )
 
     img = cv2.cvtColor(find_element_from_file.partImg, cv2.COLOR_BGR2GRAY)
-
     file_path = f"files/{resolution}/{file}"
+    if settings_dict["locale"]:
+        i18n_file_path = f"files/i18n/{settings_dict['locale']}/{resolution}/{file}"
+        if os.path.isfile(i18n_file_path):
+            file_path = i18n_file_path
     if not os.path.isfile(file_path):
         log.error(f'Err: file "{file_path}" doesn\'t exist.')
         return None
